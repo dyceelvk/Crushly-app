@@ -1,31 +1,28 @@
-# Built things
-_Debug/
-Compiled/
+# Dependencies
+node_modules/
 
-# AudioCache can be rebuilt from sources
-AudioCache/
+# Build output
+dist/
+dist-ssr/
+*.local
 
-# Lockfile
-_OpenInEditor.lock
+# Vite / logs
+vite.config.*.timestamp-*
+*.log
+npm-debug.log*
 
-# User settings
-Game.agf.user
-*.crm.user
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Backups
-Game.agf.bak
-backup_acsprset.spr
-
-# Memory dumps
-*.dmp
-
-# Temporary files
-# temporarily created during sprite or room background compression
-~aclzw.tmp
-# temporary, main game data, before getting packed into exe
-game28.dta
-# temporary build of the game before being moved to Compiled/ folder
-*.exe
-
-# Log files
-warnings.log
+# Env
+.env
+.env.*
+!.env.example

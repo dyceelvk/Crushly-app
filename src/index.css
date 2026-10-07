@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-crush-50: #fff1f4;
+  --color-crush-100: #ffdfe7;
+  --color-crush-200: #ffc3d1;
+  --color-crush-300: #ff9aaf;
+  --color-crush-400: #ff6484;
+  --color-crush-500: #ff2e63;
+  --color-crush-600: #ed1449;
+  --color-crush-700: #c60a3a;
+  --color-night-700: #241b45;
+  --color-night-800: #180f33;
+  --color-night-900: #0f0a1e;
+  --color-night-950: #090614;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-night-950);
+  color: #f5f1ff;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* App shell: centered column like a social app */
+.app-shell {
+  background:
+    radial-gradient(1200px 500px at 50% -120px, rgba(255, 46, 99, 0.16), transparent 60%),
+    radial-gradient(900px 420px at 90% 0%, rgba(124, 58, 237, 0.14), transparent 60%),
+    var(--color-night-950);
+  min-height: 100dvh;
+}
+
+.glass {
+  background: rgba(24, 15, 51, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.09);
+}
+
+.btn-crush {
+  background: linear-gradient(135deg, #ff2e63, #b5179e);
+  box-shadow: 0 8px 24px -8px rgba(255, 46, 99, 0.65);
+}
+.btn-crush:hover { filter: brightness(1.08); }
+.btn-crush:active { transform: scale(0.98); }
+
+.btn-big {
+  background: linear-gradient(135deg, #ffd166, #ff2e63 60%, #7c3aed);
+  box-shadow: 0 8px 28px -8px rgba(255, 209, 102, 0.55);
+}
+
+.text-gradient {
+  background: linear-gradient(92deg, #ff6b9d, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.vibe-ring {
+  background: conic-gradient(from 210deg, #ff2e63, #ffd166, #7c3aed, #ff2e63);
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%);
+  animation: shimmer 2.2s infinite;
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.pop-in { animation: pop-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+
+@keyframes float-up {
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.float-up { animation: float-up 0.4s ease both; }
+.float-up-1 { animation: float-up 0.4s 0.05s ease both; }
+.float-up-2 { animation: float-up 0.4s 0.1s ease both; }
+.float-up-3 { animation: float-up 0.4s 0.15s ease both; }
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.18); }
+  45% { transform: scale(1); }
+  60% { transform: scale(1.14); }
+}
+.heartbeat { animation: heartbeat 0.7s ease; }
+
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
