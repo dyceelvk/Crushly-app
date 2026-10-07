@@ -46,7 +46,7 @@ script: `npm run audit` (`scripts/audit-language.mjs`) reads the banned list out
 of the language module and fails on any banned word found in a user-facing
 string literal or JSX text node — while ignoring identifiers, since `likes` in
 code is correct. It also verifies the glossary still covers all 19 required
-terms. Currently: **388 strings across 13 files, 38 banned terms, 0 findings.**
+terms. Currently: **485 strings across 14 files, 38 banned terms, 0 findings.**
 
 `npm run verify` chains typecheck and audit.
 
@@ -58,9 +58,15 @@ src/
   data/mock.ts           conventional data model (NOT renamed)
   state/useCrushly.ts     reducer: crush → mutual crush → Click → Whispers
   components/            Avatar, Chip, Sheet, ConfirmSheet, SpaceSheet
-  screens/               Flow · Discover · Around · Whispers · Space
+  screens/               Onboarding · Flow · Discover · Around · Whispers · Space
   App.tsx                §41 navigation, alerts, safety confirmations
 ```
+
+Onboarding (§4, §5) is seven single-question steps — name, username, age with
+an 18+ floor, pronouns, area, Space photo, About Me, interests, then "What
+brings you here?" — and it writes into the conventional fields above, so the
+`about` column never becomes a `bio` column. Space Settings has a
+"Review onboarding" action that re-enters the flow.
 
 The five tabs are `Flow · Discover · Around · Whispers · Space` (§41). Discovery
 is one ranked pick plus a grid rather than an endless swipe deck (§9). Distance
@@ -87,7 +93,11 @@ unspecified and are decisions this build made. Each needs a yes/no from you:
    friends-list and group. Resolved: Circle = your people; Circles are the
    grouping named in copy, not a separate community product yet.
 5. **Onboarding.** §4 collects a `Bio` while §7 mandates `Bio → About Me`. The
-   label used everywhere is About Me.
+   built flow labels the step About Me and stores it in `about`.")
+
+`npm run smoke` covers 33 runtime assertions: the §33 flow (one-way Crush must
+not create a Click, a mutual one must), §35 cut-off withdrawal, Unclick,
+re-show suppression, distance bucketing, and a render pass over every screen.
 
 Not implemented, all needing product decisions before code: real accounts and
 auth, photo verification, moderation tooling, image/NSFW policy, rate limits on

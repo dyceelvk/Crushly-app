@@ -83,6 +83,9 @@ export interface State {
     /** §30 — authentication terms stay standard. */
     ageVerified: boolean
     hue: number
+    /** §4 — onboarding is a real, incomplete-or-complete state, not a splash. */
+    onboarded: boolean
+    photoUrl: string | null
   }
   profiles: Profile[]
   /** profileId -> user crushed them */
@@ -160,6 +163,23 @@ const profiles: Profile[] = [
   },
 ]
 
+/** §4 — the pools onboarding offers. Deliberately overlaps fixture interests
+ * so shared-interest ranking (§9/§34) has something to work with. */
+export const INTEREST_POOL = [
+  'Ramen', 'Coffee', 'Running', 'Gym', 'Cycling', 'Film photography', 'Vinyl',
+  'Afrobeats', 'Jazz', 'Books', 'Coding', 'Theatre', 'Hiking', 'Cooking',
+  'Board games', 'Football', 'Music', 'Production', 'Anime', 'Wine', 'Dogs',
+  'Travel', 'Tennis', 'Art', 'Gaming', 'Parties', 'Reading', 'Dancing',
+]
+
+/** §11 — areas are the coarsest unit a Space can claim. */
+export const AREAS = [
+  'Port Harcourt', 'Brawley', 'GRA Phase 2', 'Oyigbo Rd', 'Peter Odili Rd',
+  'Trans Amadi', 'Rumuokoro', 'Ikeja', 'Yaba', 'Lekki',
+]
+
+export const PRONOUN_OPTIONS = ['he/him', 'he/they', 'they/them', 'she/her', 'bi/curious']
+
 export const initialState: State = {
   me: {
     id: 'me', name: 'Obi', username: 'obioke', age: 30, pronouns: 'he/him',
@@ -167,7 +187,7 @@ export const initialState: State = {
     interests: ['Running', 'Ramen', 'Coffee', 'Film photography'],
     lookingFor: ['Dating', 'Something Serious'],
     verified: true, discoverable: true, showDistance: true, showOnlineStatus: true,
-    ageVerified: true, hue: 12,
+    ageVerified: true, hue: 12, onboarded: true, photoUrl: null,
   },
   profiles,
   likes: {},

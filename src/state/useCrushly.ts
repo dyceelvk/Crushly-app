@@ -147,6 +147,18 @@ export function reducer(ui: UiState, action: Action): UiState {
     case 'saveMoment':
       return { ...ui, state: { ...s, posts: s.posts.map((p) => (p.id === action.postId ? { ...p, saved: !p.saved } : p)) } }
 
+    case 'updateMe':
+      // Conventional field names on write (§38); the UI labels them About Me,
+      // Pronouns, Area when reading them back.
+      return { ...ui, state: { ...s, me: { ...s.me, ...action.patch } } }
+
+    case 'completeOnboarding':
+      return {
+        ...ui,
+        state: { ...s, me: { ...s.me, onboarded: true } },
+        alerts: push(ui.alerts, copy.welcomeAlert(s.me.name), 'info'),
+      }
+
     case 'setPreference':
       return { ...ui, state: { ...s, me: { ...s.me, [action.key]: action.value } } }
 

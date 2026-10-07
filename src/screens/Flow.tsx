@@ -20,7 +20,7 @@ export function FlowScreen({ ui, dispatch }: Props) {
           <h1>{copy.yourFlow}</h1>
           <p className="muted">{s.me.area} · {copy.aroundNow}: {s.profiles.filter((p) => p.onlineNow && !s.blocks[p.id]).length}</p>
         </div>
-        <Avatar name={s.me.name} hue={s.me.hue} size={40} ring="vibe" />
+        <Avatar name={s.me.name} hue={s.me.hue} size={40} ring="vibe" src={s.me.photoUrl} />
       </header>
 
       <section className="vibes" aria-label={copy.vibeRailLabel}>
@@ -46,7 +46,7 @@ export function FlowScreen({ ui, dispatch }: Props) {
         })}
         {s.stories.filter((x) => x.authorId === 'me').map((story) => (
           <button key={story.id} className="vibe mine" aria-label={`${copy.yourVibe}: ${story.label}`}>
-            <span className="vibe-ring"><Avatar name={s.me.name} hue={s.me.hue} size={44} /></span>
+            <span className="vibe-ring"><Avatar name={s.me.name} hue={s.me.hue} size={44} src={s.me.photoUrl} /></span>
             <span className="vibe-name">You</span>
           </button>
         ))}

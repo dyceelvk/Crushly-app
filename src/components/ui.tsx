@@ -2,9 +2,25 @@ import type { ReactNode } from 'react'
 import { copy } from '../language/crushly'
 
 export function Avatar({
-  name, hue, size = 44, ring,
-}: { name: string; hue: number; size?: number; ring?: 'none' | 'vibe' | 'verified' }) {
+  name, hue, size = 44, ring, src,
+}: {
+  name: string
+  hue: number
+  size?: number
+  ring?: 'none' | 'vibe' | 'verified'
+  /** Chosen in onboarding §4; gradient initials are the fallback. */
+  src?: string | null
+}) {
   const initials = name.slice(0, 1).toUpperCase()
+  if (src) {
+    return (
+      <span
+        className={`avatar photo${ring && ring !== 'none' ? ` ring-${ring}` : ''}`}
+        style={{ width: size, height: size, backgroundImage: `url(${src})` }}
+        aria-hidden
+      />
+    )
+  }
   return (
     <span
       className={`avatar${ring && ring !== 'none' ? ` ring-${ring}` : ''}`}

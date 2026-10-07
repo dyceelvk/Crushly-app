@@ -32,7 +32,7 @@ export function SpaceScreen({ ui, dispatch }: Props) {
 
       <div className="me-card">
         <div className="me-photo" style={{ backgroundImage: `linear-gradient(150deg, hsl(${s.me.hue} 70% 52%), hsl(${(s.me.hue + 60) % 360} 62% 26%))` }}>
-          <Avatar name={s.me.name} hue={s.me.hue} size={72} />
+          <Avatar name={s.me.name} hue={s.me.hue} size={72} src={s.me.photoUrl} />
           <p className="space-name">{s.me.name}, {s.me.age} <VerifiedMark verified={s.me.verified} name={s.me.name} /></p>
           <p className="space-sub">{s.me.pronouns} · {s.me.area}</p>
         </div>
@@ -102,6 +102,12 @@ export function SpaceScreen({ ui, dispatch }: Props) {
           </button>
 
           <SectionTitle>{copy.account}</SectionTitle>
+          <button
+            className="btn quiet wide"
+            onClick={() => dispatch({ type: 'updateMe', patch: { onboarded: false } })}
+          >
+            {copy.obRestart}
+          </button>
           <div className="list-links">
             <span>{copy.security}</span>
             <span>{copy.communityGuidelines}</span>

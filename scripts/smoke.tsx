@@ -14,6 +14,7 @@ import { AroundScreen } from '../src/screens/Around'
 import { WhispersScreen } from '../src/screens/Whispers'
 import { SpaceScreen } from '../src/screens/Space'
 import { SpaceSheet } from '../src/components/SpaceSheet'
+import { OnboardingScreen } from '../src/screens/Onboarding'
 
 const fails: string[] = []
 const ok = (label: string, pass: boolean, extra = '') => {
@@ -65,6 +66,22 @@ ok('0.8 km buckets to "Less than 1 km away"', describeDistance(0.8) === copy.les
 ok('2.4 km buckets to a rounded figure', describeDistance(2.4) === '2 km away', describeDistance(2.4))
 ok('32.4 km buckets to area only', describeDistance(32.4) === copy.aroundYourArea)
 
+// --- §4 onboarding writes conventional fields, never "bio" (§38) ---
+const onboarded = reducer(
+  reducer(base, {
+    type: 'updateMe',
+    patch: { name: 'Eze', username: 'ezeo', age: 24, about: 'Cooks jollof competitively.', interests: ['Ramen', 'Coffee', 'Running'], lookingFor: ['Dating'] },
+  }),
+  { type: 'completeOnboarding' },
+)
+ok('onboarding marks the Space complete', onboarded.state.me.onboarded === true)
+ok('§38 — onboarding stores About Me text in `about`, not a "bio" field',
+  onboarded.state.me.about.includes('jollof') && !('bio' in onboarded.state.me))
+ok('onboarding greets the user in Crushly terms',
+  onboarded.alerts.some((a) => a.text === copy.welcomeAlert('Eze')),
+  onboarded.alerts.map((a) => a.text).join(' | '))
+ok('§36 — under-18 is refused by the same gate copy', copy.obTooYoung.includes('18'))
+
 // --- render every screen (derived selectors mirrored from the hook) ---
 const derive = (u: UiState) => {
   const st = u.state
@@ -84,7 +101,7 @@ const derive = (u: UiState) => {
   }
 }
 const ui = derive(mutual) as never
-for (const [name, El] of Object.entries({ FlowScreen, DiscoverScreen, AroundScreen, WhispersScreen, SpaceScreen })) {
+for (const [name, El] of Object.entries({ OnboardingScreen, FlowScreen, DiscoverScreen, AroundScreen, WhispersScreen, SpaceScreen })) {
   try {
     const html = renderToStaticMarkup(createElement(El as never, { ui, dispatch: () => {} } as never))
     ok(`${name} renders`, html.length > 200, `${html.length} bytes`)
@@ -104,7 +121,7 @@ try {
     `len=${fresh.length}`)
   ok('§12 — after sending, the action reads Crushed, never Liked',
     renderSheet(mutual.state, 'p1').includes('Crushed'))
-  ok('§33 — Whispers are gated behind a Click on an Space with no Click',
+  ok('§33 — Whispers are gated behind a Click on a Space with no Click',
     fresh.includes(copy.clickOpensWhispers))
   ok('§33 — a Click opens the Whisper composer',
     renderSheet(mutual.state, 'p1').includes(copy.sendWhisper))

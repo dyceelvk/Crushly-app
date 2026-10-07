@@ -3,6 +3,7 @@ import { useCrushly } from './state/useCrushly'
 import { NAV, copy } from './language/crushly'
 import { ConfirmSheet } from './components/ui'
 import { SpaceSheet } from './components/SpaceSheet'
+import { OnboardingScreen } from './screens/Onboarding'
 import { FlowScreen } from './screens/Flow'
 import { DiscoverScreen } from './screens/Discover'
 import { AroundScreen } from './screens/Around'
@@ -38,6 +39,14 @@ export default function App() {
           <button className="btn ghost wide" onClick={() => setAdult(false)}>{copy.ageGateDecline}</button>
           <p className="hint">{copy.ageGateNote}</p>
         </div>
+      </div>
+    )
+  }
+
+  if (!ui.state.me.onboarded) {
+    return (
+      <div className="phone">
+        <OnboardingScreen ui={ui} dispatch={dispatch} />
       </div>
     )
   }

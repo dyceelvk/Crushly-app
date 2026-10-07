@@ -1,4 +1,5 @@
 import type { UiState } from './useCrushly'
+import type { State } from '../data/mock'
 
 /**
  * The only write surface the UI has. Every action is named after the
@@ -18,6 +19,8 @@ export type Action =
   | { type: 'shareMoment'; body: string }
   | { type: 'shareVibe'; label: string }
   | { type: 'saveMoment'; postId: string }
+  | { type: 'updateMe'; patch: Partial<State['me']> }
+  | { type: 'completeOnboarding' }
   | { type: 'setPreference'; key: 'discoverable' | 'showDistance' | 'showOnlineStatus'; value: boolean }
   | { type: 'openSpace'; profileId: string | null }
   | { type: 'confirm'; kind: UiState['confirm'] }
