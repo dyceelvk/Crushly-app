@@ -11,6 +11,7 @@ boundary rather than a find-and-replace over UI strings.
 npm install
 npm run dev        # http://localhost:5173
 npm run verify     # typecheck + language audit
+npm run smoke      # behaviour + render assertions
 npm run build
 ```
 
@@ -93,7 +94,7 @@ unspecified and are decisions this build made. Each needs a yes/no from you:
    friends-list and group. Resolved: Circle = your people; Circles are the
    grouping named in copy, not a separate community product yet.
 5. **Onboarding.** §4 collects a `Bio` while §7 mandates `Bio → About Me`. The
-   built flow labels the step About Me and stores it in `about`.")
+   built flow labels the step About Me and stores it in `about`.
 
 `npm run smoke` covers 33 runtime assertions: the §33 flow (one-way Crush must
 not create a Click, a mutual one must), §35 cut-off withdrawal, Unclick,
