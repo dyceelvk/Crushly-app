@@ -133,6 +133,7 @@ export const copy = {
   shareMoment: 'Share a Moment',
   shareVibe: 'Share a Vibe',
   savedMoments: 'Saved Moments',
+  vibes: 'Vibes',
 
   // Space. §7
   aboutMe: 'About Me',
@@ -227,6 +228,57 @@ export const copy = {
   onlineToggle: 'Show when I am Around',
   settingsTitle: 'Settings',
 
+  // Crush Alerts log. §21 — the only word for notifications on screen.
+  alertsTitle: 'Crush Alerts',
+  alertsEmpty: 'No Crush Alerts yet. When something happens, it lands here.',
+  alertsUnread: (n: number) => `${n} unread ${n === 1 ? 'Crush Alert' : 'Crush Alerts'}`,
+  alertsCaughtUp: 'All caught up',
+  markAllRead: 'Mark all read',
+  crushTakenBack: (name: string) => `Crush taken back from ${name}.`,
+  takeBackCrush: 'Take Back Crush',
+  unreadLabel: 'Unread',
+  crushesTab: 'Crushes',
+  crushBackHint: 'Crush back to Click',
+  closeOneSince: 'One of your Close Ones',
+  circleSince: 'In your Circle',
+  awaitingReply: 'Waiting for a Crush back',
+  save: 'Save',
+  alertTime: (mins: number) => (mins < 1 ? 'now' : mins < 60 ? `${mins} min ago` : mins < 1440 ? `${Math.round(mins / 60)} hr ago` : `${Math.round(mins / 1440)} d ago`),
+
+  // Activity hub. §12, §14, §15, §16
+  activityTitle: 'Crushes · Clicks · Close Ones',
+  tabSentYou: 'Sent you a Crush — Crush back to Click',
+  tabCrushHistory: 'Crush History',
+  tabClickHistory: 'Click History',
+  tabCloseOnes: 'Your Close Ones',
+  tabKeeping: "People you're Keeping Close",
+  crushedBack: 'Crushed back',
+  noActivity: 'Nothing here yet.',
+
+  // Settings rows. §27, §28, §29
+  verificationRow: 'Verified Space',
+  verificationRowOff: 'Verify your Space',
+  verificationHint: 'Verification keeps your details private. Only the badge is shown.',
+  whisperWho: 'Who can Whisper you',
+  whisperEveryone: 'Everyone',
+  whisperClicksOnly: 'Clicks only',
+  whisperHint: 'Clicks only keeps Whispers inside a Click. Everyone lets a Whisper land as a request.',
+  ageRangeLabel: 'Age range',
+  distanceLabel: 'Max distance',
+  resetDemo: 'Reset this preview',
+  signOut: 'Sign Out',
+  deleteAccountBody: 'Permanently removes your Space, Moments, Vibes and Whispers.',
+  verifiedOn: 'Your Space is verified',
+
+  // §17 — a reply indicator, in Crushly's words.
+  whisperReplies: [
+    'Okay, that made me smile.',
+    'Tell me more.',
+    'Same. When are you free?',
+    'Good answer. Very good answer.',
+    'We should continue this over coffee.',
+  ],
+
   // Onboarding. §4, §5 — a Space is created, not "registered".
   obTitle: 'Create your Space',
   obStep: (n: number, total: number) => `Step ${n} of ${total}`,
@@ -248,7 +300,7 @@ export const copy = {
   obPhotoUpload: 'Use my own image',
   obPhotoUploaded: 'Using your image',
   obAbout: `Tell them a little`,
-  obAboutHint: 'What is it like to spend an evening with you?',
+  obAboutHint: 'A line or two. What fills your week?',
   obAboutPlaceholder: 'A line or two is plenty.',
   obInterests: 'What are you into?',
   obInterestsHint: 'Pick at least three. These drive who you are shown.',
@@ -259,6 +311,7 @@ export const copy = {
   obFinish: 'Enter my Flow',
   obSkip: 'Skip for now',
   obRestart: 'Review onboarding',
+  obRestartHint: 'Step back through the seven questions that set up your Space.',
   obRequired: 'Add this to continue.',
   obUsernameShort: 'Use 3 characters or more.',
   obUsernameTaken: 'That username is taken.',
@@ -307,6 +360,23 @@ export const copy = {
     'Not Sure Yet',
   ],
 } as const
+
+/** §21 — every stored alert renders from its kind, so no alert copy lives in a
+ * component. `at` is a timestamp; the label is relative. */
+export function crushAlertText(
+  kind: 'crush' | 'bigCrush' | 'click' | 'keepClose' | 'whisper' | 'vibe' | 'moment',
+  name: string,
+): string {
+  switch (kind) {
+    case 'crush': return copy.crushAlert(name)
+    case 'bigCrush': return copy.bigCrushAlert(name)
+    case 'click': return copy.clickAlert(name)
+    case 'keepClose': return copy.keepCloseAlert(name)
+    case 'whisper': return copy.newWhisperAlert
+    case 'vibe': return copy.vibeAlert(name)
+    default: return copy.momentAlert(name)
+  }
+}
 
 /** §11 — coarse buckets only. Exact distance and GPS are never exposed. */
 export function describeDistance(km: number): string {

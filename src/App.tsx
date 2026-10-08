@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
+import { Bell, Compass, Heart, Home, MapPin, MessageCircleHeart, User } from 'lucide-react'
 import { useCrushly } from './state/useCrushly'
+import type { Overlay } from './state/types'
 import { NAV, copy } from './language/crushly'
-import { ConfirmSheet } from './components/ui'
+import { ConfirmSheet, Sheet } from './components/ui'
 import { SpaceSheet } from './components/SpaceSheet'
+import { ActivityPanel, AlertsPanel, EditSpacePanel, SettingsPanel } from './components/panels'
 import { OnboardingScreen } from './screens/Onboarding'
 import { FlowScreen } from './screens/Flow'
 import { DiscoverScreen } from './screens/Discover'
@@ -14,19 +17,35 @@ import { SpaceScreen } from './screens/Space'
 const TAB_KEY = ['flow', 'discover', 'around', 'whispers', 'space'] as const
 type Tab = (typeof TAB_KEY)[number]
 
+const TAB_ICON = { flow: Home, discover: Compass, around: MapPin, whispers: MessageCircleHeart, space: User }
+
 export default function App() {
   const crushly = useCrushly()
   const { ui, dispatch } = crushly
+  const s = ui.state
   const [tab, setTab] = useState<Tab>('flow')
+  const [overlay, setOverlay] = useState<Overlay>('none')
   // §36 — the prompt demanded an age floor but never named one; 18+ is the
   // assumption this build makes, and it gates every adult surface.
   const [adult, setAdult] = useState(false)
 
+  // Transient alerts auto-clear.
   useEffect(() => {
     if (!ui.alerts.length) return
     const timers = ui.alerts.map((a) => window.setTimeout(() => dispatch({ type: 'dismissAlert', id: a.id }), 4200))
     return () => timers.forEach(clearTimeout)
   }, [ui.alerts, dispatch])
+
+  // §17 — "Whispering…" then a reply. Timed here, not in the reducer.
+  useEffect(() => {
+    const who = s.typingProfileId
+    if (!who) return
+    const t = window.setTimeout(() => {
+      const lines = copy.whisperReplies
+      dispatch({ type: 'whisperReply', profileId: who, body: lines[Math.floor(Math.random() * lines.length)] })
+    }, 1600)
+    return () => clearTimeout(t)
+  }, [s.typingProfileId, dispatch])
 
   if (!adult) {
     return (
@@ -43,7 +62,7 @@ export default function App() {
     )
   }
 
-  if (!ui.state.me.onboarded) {
+  if (!s.me.onboarded) {
     return (
       <div className="phone">
         <OnboardingScreen ui={ui} dispatch={dispatch} />
@@ -51,24 +70,43 @@ export default function App() {
     )
   }
 
-  const openProfile = ui.openSpaceId ? ui.state.profiles.find((p) => p.id === ui.openSpaceId) ?? null : null
-  const confirmProfile = ui.confirm ? ui.state.profiles.find((p) => p.id === ui.confirm!.profileId) : null
+  const openProfile = ui.openSpaceId ? s.profiles.find((p) => p.id === ui.openSpaceId) ?? null : null
+  const confirmProfile = ui.confirm ? s.profiles.find((p) => p.id === ui.confirm!.profileId) : null
 
   const screens: Record<Tab, React.ReactNode> = {
     flow: <FlowScreen ui={ui} dispatch={dispatch} />,
     discover: <DiscoverScreen ui={ui} dispatch={dispatch} />,
     around: <AroundScreen ui={ui} dispatch={dispatch} />,
     whispers: <WhispersScreen ui={ui} dispatch={dispatch} />,
-    space: <SpaceScreen ui={ui} dispatch={dispatch} />,
+    space: <SpaceScreen ui={ui} dispatch={dispatch} onOpen={(o) => setOverlay(o)} />,
   }
 
-  const unread = ui.threads.reduce((n, t) => {
-    const all = ui.state.messages.filter((m) => m.matchId === t.match.id)
-    return n + (all.length && !all[all.length - 1].fromMe ? 1 : 0)
-  }, 0) + ui.incoming.length
+  const unread =
+    ui.threads.reduce((n, t) => {
+      const all = s.messages.filter((m) => m.matchId === t.match.id)
+      return n + (all.length && !all[all.length - 1].fromMe ? 1 : 0)
+    }, 0) + ui.incoming.length
 
   return (
     <div className="phone">
+      <header className="topbar">
+        <span className="brand" aria-hidden>C</span>
+        <span className="brand-word">Crushly</span>
+        <span className="grow" />
+        <button
+          className="topbtn"
+          onClick={() => setOverlay('activity')}
+          aria-label={`${copy.crushesTab} & ${copy.clicksLabel}`}
+        >
+          <Heart size={18} />
+          {ui.incoming.length ? <span className="topbadge">{ui.incoming.length}</span> : null}
+        </button>
+        <button className="topbtn" onClick={() => setOverlay('alerts')} aria-label={copy.alertsTitle}>
+          <Bell size={18} />
+          {ui.unreadAlerts ? <span className="topbadge violet">{ui.unreadAlerts}</span> : null}
+        </button>
+      </header>
+
       <main className="body" key={tab}>
         {screens[tab]}
       </main>
@@ -77,15 +115,16 @@ export default function App() {
         {NAV.map((label, i) => {
           const key = TAB_KEY[i]
           const on = key === tab
+          const Icon = TAB_ICON[key]
           return (
             <button
               key={key}
               className={on ? 'tab-item on' : 'tab-item'}
-              onClick={() => setTab(key)}
+              onClick={() => { setTab(key); setOverlay('none') }}
               aria-current={on ? 'page' : undefined}
               aria-label={label}
             >
-              <span className="tab-glyph" aria-hidden>{GLYPH[key]}</span>
+              <Icon size={19} className="tab-glyph" aria-hidden />
               <span className="tab-label">{label}</span>
               {key === 'whispers' && unread ? <span className="tab-badge" aria-label={`${unread} new`}>{unread}</span> : null}
             </button>
@@ -104,10 +143,27 @@ export default function App() {
         </div>
       ) : null}
 
+      {overlay !== 'none' ? (
+        <Sheet
+          title={
+            overlay === 'alerts' ? copy.alertsTitle
+              : overlay === 'activity' ? copy.activityTitle
+              : overlay === 'edit' ? copy.editSpace
+              : copy.settingsTitle
+          }
+          onClose={() => setOverlay('none')}
+        >
+          {overlay === 'alerts' ? <AlertsPanel state={s} dispatch={dispatch} /> : null}
+          {overlay === 'activity' ? <ActivityPanel state={s} dispatch={dispatch} /> : null}
+          {overlay === 'settings' ? <SettingsPanel state={s} dispatch={dispatch} onEdit={() => setOverlay('edit')} /> : null}
+          {overlay === 'edit' ? <EditSpacePanel state={s} dispatch={dispatch} onDone={() => setOverlay('none')} /> : null}
+        </Sheet>
+      ) : null}
+
       {openProfile ? (
         <SpaceSheet
           profile={openProfile}
-          state={ui.state}
+          state={s}
           dispatch={dispatch}
           onClose={() => dispatch({ type: 'openSpace', profileId: null })}
         />
@@ -136,12 +192,7 @@ function confirmProps(kind: 'cutOff' | 'flag' | 'unclick', name: string, onConfi
     }
   }
   if (kind === 'flag') {
-    return {
-      title: copy.flagConfirmTitle,
-      body: copy.flagConfirmBody,
-      confirmLabel: copy.flagForReview,
-      onConfirm, onCancel,
-    }
+    return { title: copy.flagConfirmTitle, body: copy.flagConfirmBody, confirmLabel: copy.flagForReview, onConfirm, onCancel }
   }
   return {
     title: copy.unclickConfirmTitle(name),
@@ -149,12 +200,4 @@ function confirmProps(kind: 'cutOff' | 'flag' | 'unclick', name: string, onConfi
     confirmLabel: copy.unclickConfirmAction,
     onConfirm, onCancel, danger: true,
   }
-}
-
-const GLYPH: Record<Tab, string> = {
-  flow: '≋',
-  discover: '◎',
-  around: '⌖',
-  whispers: '◗',
-  space: '◉',
 }

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Heart, Search, Star, Users, X } from 'lucide-react'
 import { AboutMe, Chip, DistanceTag, EmptyState, SectionTitle, VerifiedMark } from '../components/ui'
 import { copy, describeDistance } from '../language/crushly'
 import type { Props } from './types'
@@ -47,14 +48,14 @@ export function DiscoverScreen({ ui, dispatch }: Props) {
       </header>
 
       <div className="findbar">
-        <span aria-hidden>⌕</span>
+        <span className="findbar-icon" aria-hidden><Search size={16} /></span>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={copy.findPlaceholder}
           aria-label={copy.findMen}
         />
-        {q ? <button className="icon-btn" onClick={() => setQ('')} aria-label={copy.clearFind}>✕</button> : null}
+        {q ? <button className="icon-btn" onClick={() => setQ('')} aria-label={copy.clearFind}><X size={14} /></button> : null}
       </div>
 
       {open ? (
@@ -111,13 +112,13 @@ export function DiscoverScreen({ ui, dispatch }: Props) {
               </div>
               <div className="pick-actions">
                 <button className="btn big" onClick={() => dispatch({ type: 'crush', profileId: pick.id, big: true })} disabled={Boolean(s.superLikes[pick.id])}>
-                  ★ {copy.sendBigCrush}
+                  <Star size={15} aria-hidden /> {copy.sendBigCrush}
                 </button>
                 <button className="btn crush" onClick={() => dispatch({ type: 'crush', profileId: pick.id, big: false })} disabled={Boolean(s.likes[pick.id])}>
-                  ♥ {s.likes[pick.id] ? 'Crushed' : copy.sendCrush}
+                  <Heart size={15} aria-hidden /> {s.likes[pick.id] ? 'Crushed' : copy.sendCrush}
                 </button>
                 <button className="btn" onClick={() => dispatch({ type: 'keepClose', profileId: pick.id })} disabled={Boolean(s.following[pick.id])}>
-                  {copy.keepClose}
+                  <Users size={14} aria-hidden /> {copy.keepClose}
                 </button>
                 <button className="btn quiet" onClick={() => dispatch({ type: 'pass', profileId: pick.id })} aria-label={copy.pass}>
                   {copy.pass}
@@ -155,7 +156,7 @@ export function DiscoverScreen({ ui, dispatch }: Props) {
                   onKeyDown={(e) => e.key === 'Enter' && dispatch({ type: 'crush', profileId: p.id, big: false })}
                   aria-label={copy.sendCrush}
                 >
-                  ♥
+                  <Heart size={13} fill={s.likes[p.id] ? 'currentColor' : 'none'} />
                 </span>
                 <span
                   role="button"
@@ -165,7 +166,7 @@ export function DiscoverScreen({ ui, dispatch }: Props) {
                   onKeyDown={(e) => e.key === 'Enter' && dispatch({ type: s.following[p.id] ? 'letGo' : 'keepClose', profileId: p.id })}
                   aria-label={s.following[p.id] ? copy.letGo : copy.keepClose}
                 >
-                  ◎
+                  <Users size={13} />
                 </span>
               </span>
             </button>

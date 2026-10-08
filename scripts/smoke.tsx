@@ -15,6 +15,7 @@ import { WhispersScreen } from '../src/screens/Whispers'
 import { SpaceScreen } from '../src/screens/Space'
 import { SpaceSheet } from '../src/components/SpaceSheet'
 import { OnboardingScreen } from '../src/screens/Onboarding'
+import { AlertsPanel, ActivityPanel, EditSpacePanel, SettingsPanel } from '../src/components/panels'
 
 const fails: string[] = []
 const ok = (label: string, pass: boolean, extra = '') => {
@@ -82,6 +83,37 @@ ok('onboarding greets the user in Crushly terms',
   onboarded.alerts.map((a) => a.text).join(' | '))
 ok('§36 — under-18 is refused by the same gate copy', copy.obTooYoung.includes('18'))
 
+// --- §21 Crush Alerts are a real log, not just a transient toast ---
+const withLog = reducer(base, { type: 'crush', profileId: 'p1', big: false })
+const latest = withLog.state.notifications[0]
+ok('a Click is written to the Crush Alerts log', latest?.kind === 'click', String(latest?.kind))
+ok('the log marks new entries unread', latest?.read === false)
+ok('§21 marking read clears every unread flag',
+  reducer(withLog, { type: 'markAlertsRead' }).state.notifications.every((n) => n.read))
+
+// --- §12 Take Back Crush ---
+const crushedP2 = reducer(base, { type: 'crush', profileId: 'p2', big: false })
+const taken = reducer(crushedP2, { type: 'takeBackCrush', profileId: 'p2' })
+ok('§12 Take Back Crush removes the pending Crush', taken.state.likes.p2 === undefined)
+ok('taking it back does not fabricate a Click', taken.state.matches.length === base.state.matches.length)
+
+// --- §17 Whispering indicator, then a reply ---
+const sent = reducer(mutual, { type: 'sendWhisper', profileId: 'p1', body: 'Coffee on Sunday?' })
+ok('§17 sending a Whisper sets the Whispering state', sent.state.typingProfileId === 'p1')
+const answered = reducer(sent, { type: 'whisperReply', profileId: 'p1', body: 'Only if you pick the place.' })
+ok('the reply clears the indicator', answered.state.typingProfileId === null)
+ok('the reply lands in that thread only',
+  answered.state.messages.filter((m) => !m.fromMe).length ===
+    sent.state.messages.filter((m) => !m.fromMe).length + 1)
+ok('an inbound Whisper becomes a Crush Alert',
+  answered.state.notifications[0]?.kind === 'whisper')
+
+// --- §27/§28 preferences are writable ---
+ok('§27 whisper permission is changeable',
+  reducer(base, { type: 'updateMe', patch: { whisperPermission: 'Everyone' } }).state.me.whisperPermission === 'Everyone')
+ok('§28 verification status toggles on the Space, not on any document field',
+  reducer(base, { type: 'toggleVerified' }).state.me.verified === false)
+
 // --- render every screen (derived selectors mirrored from the hook) ---
 const derive = (u: UiState) => {
   const st = u.state
@@ -102,6 +134,7 @@ const derive = (u: UiState) => {
 }
 const ui = derive(mutual) as never
 for (const [name, El] of Object.entries({ OnboardingScreen, FlowScreen, DiscoverScreen, AroundScreen, WhispersScreen, SpaceScreen })) {
+  // (panels are rendered separately below; screens first)
   try {
     const html = renderToStaticMarkup(createElement(El as never, { ui, dispatch: () => {} } as never))
     ok(`${name} renders`, html.length > 200, `${html.length} bytes`)
@@ -128,6 +161,20 @@ try {
   ok('Space sheet never says "Message", "Follow" or "Like"', !/>\s*(Message|Follow|Like|Block|Report)\s*</.test(fresh))
   ok('§11 — no raw coordinate or exact km figure reaches the screen',
     !/\d+\.\d+\s*km/.test(fresh) && !/lat|lng|latitude/i.test(fresh))
+
+  // --- merged panels render against the shared state ---
+  for (const [name, Panel] of Object.entries({ AlertsPanel, ActivityPanel, SettingsPanel, EditSpacePanel })) {
+    try {
+      const html = renderToStaticMarkup(createElement(Panel as never, {
+        state: withLog.state, dispatch: () => {}, onEdit: () => {}, onDone: () => {},
+      } as never))
+      ok(`${name} renders`, html.length > 150, `${html.length} bytes`)
+    } catch (e) {
+      ok(`${name} renders`, false, String(e).slice(0, 140))
+    }
+  }
+  const alertsHtml = renderToStaticMarkup(createElement(AlertsPanel as never, { state: withLog.state, dispatch: () => {} } as never))
+  ok('Crush Alerts copy is used, never "notification"', /Crush Alert/.test(alertsHtml) && !/notification/i.test(alertsHtml))
 } catch (e) {
   ok('Space sheet renders', false, String(e).slice(0, 160))
 }

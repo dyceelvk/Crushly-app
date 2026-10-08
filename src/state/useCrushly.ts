@@ -1,5 +1,5 @@
 import { useMemo, useReducer } from 'react'
-import { initialState, type State } from '../data/mock'
+import { initialState, type NotificationEntry, type State } from '../data/mock'
 import { copy } from '../language/crushly'
 import type { Action } from './types'
 
@@ -11,6 +11,11 @@ export interface UiState {
   openSpaceId: string | null
   confirm: null | { kind: 'cutOff' | 'flag' | 'unclick'; profileId: string }
 }
+
+const notify = (
+  list: NotificationEntry[], kind: NotificationEntry['kind'], profileId: string, text = '',
+): NotificationEntry[] =>
+  [{ id: `n${Date.now()}${Math.random().toString(36).slice(2, 6)}`, kind, profileId, text, at: Date.now(), read: false }, ...list].slice(0, 30)
 
 let alertSeq = 0
 const push = (alerts: Alert[], text: string, tone: Alert['tone']): Alert[] =>
@@ -36,7 +41,10 @@ export function reducer(ui: UiState, action: Action): UiState {
       } else {
         alerts = push(alerts, action.big ? copy.bigCrushSent(name) : copy.crushSent(name), 'crush')
       }
-      return { ...ui, state: { ...s, likes, superLikes, matches }, alerts }
+      const notifications = mutual
+        ? notify(s.notifications, 'click', action.profileId)
+        : notify(s.notifications, action.big ? 'bigCrush' : 'crush', action.profileId)
+      return { ...ui, state: { ...s, likes, superLikes, matches, notifications }, alerts }
     }
 
     case 'pass':
@@ -54,7 +62,15 @@ export function reducer(ui: UiState, action: Action): UiState {
     case 'askClose': {
       const followers = { ...s.followers, [action.profileId]: true }
       const name = s.profiles.find((p) => p.id === action.profileId)?.name ?? ''
-      return { ...ui, state: { ...s, followers }, alerts: push(ui.alerts, copy.keepCloseAlert(name), 'info') }
+      return {
+        ...ui,
+        state: {
+          ...s,
+          followers,
+          notifications: notify(s.notifications, 'keepClose', action.profileId),
+        },
+        alerts: push(ui.alerts, copy.keepCloseAlert(name), 'info'),
+      }
     }
 
     case 'confirmCutOff': {
@@ -114,7 +130,9 @@ export function reducer(ui: UiState, action: Action): UiState {
         ...s.messages,
         { id: `ms${Date.now()}`, matchId: match.id, fromMe: true, body: action.body, at: 'now' },
       ]
-      return { ...ui, state: { ...s, messages } }
+      // The reply itself is staged by App (setTyping/whisperReply) so this
+      // reducer stays pure — the delay is UI timing, not data.
+      return { ...ui, state: { ...s, messages, typingProfileId: action.profileId } }
     }
 
     case 'shareMoment':
@@ -158,6 +176,48 @@ export function reducer(ui: UiState, action: Action): UiState {
         state: { ...s, me: { ...s.me, onboarded: true } },
         alerts: push(ui.alerts, copy.welcomeAlert(s.me.name), 'info'),
       }
+
+    case 'takeBackCrush': {
+      // §12 — "Take Back Crush" is the only allowed wording for undoing a Crush.
+      const likes = { ...s.likes }
+      const superLikes = { ...s.superLikes }
+      delete likes[action.profileId]
+      delete superLikes[action.profileId]
+      const name = s.profiles.find((p) => p.id === action.profileId)?.name ?? ''
+      return {
+        ...ui,
+        state: { ...s, likes, superLikes },
+        alerts: push(ui.alerts, copy.crushTakenBack(name), 'info'),
+      }
+    }
+
+    case 'markAlertsRead':
+      return { ...ui, state: { ...s, notifications: s.notifications.map((n) => ({ ...n, read: true })) } }
+
+    case 'setTyping':
+      // §17 — the indicator reads "Whispering…", never "typing".
+      return { ...ui, state: { ...s, typingProfileId: action.profileId } }
+
+    case 'whisperReply': {
+      const match = s.matches.find((m) => m.profileId === action.profileId)
+      if (!match) return { ...ui, state: { ...s, typingProfileId: null } }
+      return {
+        ...ui,
+        state: {
+          ...s,
+          typingProfileId: null,
+          messages: [
+            ...s.messages,
+            { id: `ms${Date.now()}r`, matchId: match.id, fromMe: false, body: action.body, at: 'now' },
+          ],
+          notifications: notify(s.notifications, 'whisper', action.profileId),
+        },
+      }
+    }
+
+    case 'toggleVerified':
+      // §28 — only the resulting status is public; nothing about the process is.
+      return { ...ui, state: { ...s, me: { ...s.me, verified: !s.me.verified } } }
 
     case 'setPreference':
       return { ...ui, state: { ...s, me: { ...s.me, [action.key]: action.value } } }
@@ -210,6 +270,7 @@ export function useCrushly() {
         })
         .sort((a, b) => b.score - a.score),
       around: [...visible].sort((a, b) => a.distanceKm - b.distanceKm),
+      unreadAlerts: s.notifications.filter((n) => !n.read).length,
       threads: s.matches
         .map((m) => ({ match: m, profile: s.profiles.find((p) => p.id === m.profileId) }))
         .filter((x): x is { match: (typeof s.matches)[number]; profile: NonNullable<typeof x.profile> } =>

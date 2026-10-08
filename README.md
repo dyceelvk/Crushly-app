@@ -47,7 +47,7 @@ script: `npm run audit` (`scripts/audit-language.mjs`) reads the banned list out
 of the language module and fails on any banned word found in a user-facing
 string literal or JSX text node — while ignoring identifiers, since `likes` in
 code is correct. It also verifies the glossary still covers all 19 required
-terms. Currently: **485 strings across 14 files, 38 banned terms, 0 findings.**
+terms. Currently: **854 strings across 17 files, 38 banned terms, 0 findings.**
 
 `npm run verify` chains typecheck and audit.
 
@@ -60,6 +60,7 @@ src/
   state/useCrushly.ts     reducer: crush → mutual crush → Click → Whispers
   components/            Avatar, Chip, Sheet, ConfirmSheet, SpaceSheet
   screens/               Onboarding · Flow · Discover · Around · Whispers · Space
+  components/panels.tsx   Crush Alerts · Activity · Settings · Edit Space
   App.tsx                §41 navigation, alerts, safety confirmations
 ```
 
@@ -77,6 +78,48 @@ exact coordinate or precise figure exists in the render path (§11).
 Safety flows keep plain-spoken consequences (§26): "Cutting someone off prevents
 them from interacting with you." Cutting someone off removes every interaction
 path both ways, and a cut-off Space never reappears in discovery (§35).
+
+## Relationship to the parallel implementation
+
+A second session built the same prompt independently on
+`arena/c8b6d689-crushly-app` (`ac2abe3`, 30 files). That branch is not merged
+here and this one does not replace it — but four of its surfaces and two of its
+engineering ideas are now in this codebase, rebuilt against this repo's state
+layer rather than its context store:
+
+| Taken | Why |
+| --- | --- |
+| Crush Alerts log (§21) | Alerts were transient toasts. They are now a readable, mark-as-read surface. |
+| Activity hub (§12, §14–16) | The four lists the connection system implies: Crushes sent to you, your Clicks, Close Ones, Circle. |
+| Settings + Edit Space (§27–29) | Every row writes something. Nothing is decorative any more. |
+| `lucide-react` icon set | Replaces 42 unicode glyphs that rendered inconsistently across platforms. |
+| Boot guard + `netlify.toml` | A diagnosis instead of a white page, and a deploy target with SPA fallback. |
+| Motion + `prefers-reduced-motion` | `float-up`, `pop-in`, `heartbeat`; the guard was added on top, which that branch lacked. |
+
+Deliberately **not** taken:
+
+- **`picsum.photos` imagery.** Random third-party photos, for an app whose users
+  need discretion, and it fails offline. Gradient tiles are local and predictable.
+- **A simulated Crush returning after 6 seconds.** It manufactures a Click the
+  other person never chose, which cuts against §35.
+- **Their §43 audit shape.** It scans `src/pages` + `src/components` only, and
+  matches capitalised phrases. Their copy lives in `lib/language.ts`, so its own
+  `No Whispers yet. Your next conversation could start here.` — the exact leak the
+  prompt contains in §25 — passed it.
+- **Branding inside the data model.** That branch stores `crushCount` /
+  `crushedByMe` on posts and a `bio` field; §38 says internals stay
+  conventional, so here it is `likes` on posts and `about` on a Space.
+
+## The audit gate, and a loophole both implementations shared
+
+Closing the "skip the file that defines the vocabulary" shortcut made the audit
+scan the copy registry itself. That immediately surfaced a real instance in this
+repo's own onboarding copy (`What is it like to spend an evening with you?`),
+which was rewritten. Because §39 demands natural English over mechanical
+replacement, a line can now opt out explicitly with
+`// audit-allow: <reason>` — and the audit reports the reason instead of failing
+silently. Self-test: plant `feed`/`messages` in the registry and it fails;
+restore it and 854 strings pass.
 
 ## Assumptions and open items
 
@@ -96,7 +139,7 @@ unspecified and are decisions this build made. Each needs a yes/no from you:
 5. **Onboarding.** §4 collects a `Bio` while §7 mandates `Bio → About Me`. The
    built flow labels the step About Me and stores it in `about`.
 
-`npm run smoke` covers 33 runtime assertions: the §33 flow (one-way Crush must
+`npm run smoke` covers 48 runtime assertions: the §33 flow (one-way Crush must
 not create a Click, a mutual one must), §35 cut-off withdrawal, Unclick,
 re-show suppression, distance bucketing, and a render pass over every screen.
 

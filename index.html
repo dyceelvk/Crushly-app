@@ -2,13 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff4f7d'/%3E%3Cstop offset='1' stop-color='%238157ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M16 23.5S8 18.6 8 13.6C8 10.9 10.1 9 12.6 9c1.4 0 2.7.7 3.4 1.8C16.7 9.7 18 9 19.4 9 21.9 9 24 10.9 24 13.6c0 5-8 9.9-8 9.9z' fill='white'/%3E%3C/svg%3E" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0d0a12" />
-    <meta name="description" content="Crushly — a social and dating app designed for gay men." />
-    <title>Crushly</title>
+    <meta name="theme-color" content="#0b0810" />
+    <meta name="description" content="Crushly — discover men, send Crushes, Click, Keep Close and Whisper. A social and dating app designed for gay men." />
+    <title>Crushly — Discover men. Click. Whisper.</title>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Boot check: if the bundle never executes (e.g. a deploy serving source
+      // instead of dist/), replace the silent white page with a diagnosis.
+      // src/main.tsx flips this flag as soon as the module runs.
+      window.__CRUSHLY_BOOTED__ = false
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          if (window.__CRUSHLY_BOOTED__) return
+          var root = document.getElementById('root')
+          if (!root || root.hasChildNodes()) return
+          document.body.style.margin = '0'
+          document.body.style.background = '#0b0810'
+          root.innerHTML =
+            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;color:#f6f0f9;font-family:system-ui,-apple-system,sans-serif">' +
+            '<div style="max-width:430px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:32px 24px">' +
+            '<h1 style="font-size:19px;margin:0 0 8px">Crushly could not start</h1>' +
+            '<p style="font-size:14px;line-height:1.6;color:rgba(246,240,249,.7);margin:0 0 6px">The app files did not load. Check your connection and try again.</p>' +
+            '<p style="font-size:12px;line-height:1.6;color:rgba(246,240,249,.45);margin:0">Deploying? This usually means the site is serving source files instead of the built <b>dist/</b> output of <b>npm run build</b>.</p>' +
+            '<button onclick="location.reload()" style="margin-top:14px;background:linear-gradient(135deg,#ff4f7d,#8157ff);color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:14px;font-weight:700;cursor:pointer">Try again</button>' +
+            '</div></div>'
+        }, 12000)
+      })
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

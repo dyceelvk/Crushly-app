@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { BadgeCheck, X } from 'lucide-react'
 import { copy } from '../language/crushly'
 
 export function Avatar({
@@ -52,9 +53,7 @@ export function AboutMe({ text, clamp }: { text: string; clamp?: boolean }) {
 export function VerifiedMark({ verified, name }: { verified: boolean; name: string }) {
   if (!verified) return null
   return (
-    <span className="vmark" title={copy.verifiedSpace} aria-label={`${name} — ${copy.verifiedSpace}`} role="img">
-      ✓
-    </span>
+    <BadgeCheck size={16} className="vmark" aria-label={`${name} — ${copy.verifiedSpace}`} role="img" />
   )
 }
 
@@ -94,7 +93,7 @@ export function Sheet({
       <div className="sheet">
         <header className="sheet-head">
           <h2>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">✕</button>
+          <button className="icon-btn" onClick={onClose} aria-label="Close"><X size={16} /></button>
         </header>
         <div className="sheet-body">{children}</div>
         {footer ? <footer className="sheet-foot">{footer}</footer> : null}

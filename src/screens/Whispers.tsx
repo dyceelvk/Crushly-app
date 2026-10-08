@@ -67,7 +67,9 @@ export function WhispersScreen({ ui, dispatch }: Props) {
                     {profile.name} <Chip tone="quiet">{copy.clickedWith}</Chip>
                   </span>
                   <span className="row-sub">
-                    {last ? `${last.fromMe ? 'You: ' : ''}${last.body}` : copy.startTheWhisper}
+                    {s.typingProfileId === profile.id
+                      ? <em className="typing">{copy.whispering}</em>
+                      : last ? `${last.fromMe ? 'You: ' : ''}${last.body}` : copy.startTheWhisper}
                   </span>
                 </span>
               </button>

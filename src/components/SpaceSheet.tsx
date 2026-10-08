@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Flag, Heart, Scissors, Star, Users } from 'lucide-react'
 import { AboutMe, Avatar, Chip, DistanceTag, Sheet, TimeAgo, VerifiedMark } from './ui'
 import { copy, describeDistance } from '../language/crushly'
 import type { Profile, State } from '../data/mock'
@@ -58,7 +59,7 @@ export function SpaceSheet({ profile, state, dispatch, onClose }: Props) {
               disabled={crushed}
               aria-label={crushed ? 'Crush already sent' : copy.sendCrush}
             >
-              ♥ {crushed ? 'Crushed' : copy.sendCrush}
+              <Heart size={15} aria-hidden /> {crushed ? 'Crushed' : copy.sendCrush}
             </button>
             <button
               className={bigSent ? 'btn big on' : 'btn big'}
@@ -66,14 +67,14 @@ export function SpaceSheet({ profile, state, dispatch, onClose }: Props) {
               disabled={bigSent}
               aria-label={copy.sendBigCrush}
             >
-              ★ {bigSent ? 'sent' : copy.sendBigCrush}
+              <Star size={15} aria-hidden /> {bigSent ? 'sent' : copy.sendBigCrush}
             </button>
             <button
               className={keeping ? 'btn on' : 'btn'}
               onClick={() => dispatch({ type: keeping ? 'letGo' : 'keepClose', profileId: profile.id })}
               aria-label={keeping ? copy.letGo : copy.keepClose}
             >
-              {keeping ? copy.letGo : copy.keepClose}
+              <Users size={14} aria-hidden /> {keeping ? copy.letGo : copy.keepClose}
             </button>
             <button
               className="btn quiet"
@@ -81,14 +82,14 @@ export function SpaceSheet({ profile, state, dispatch, onClose }: Props) {
               disabled={flagged}
               aria-label={copy.flagConfirmTitle}
             >
-              {flagged ? 'Flagged' : copy.flagSpace}
+              <Flag size={13} aria-hidden /> {flagged ? 'Flagged' : copy.flagSpace}
             </button>
             <button
               className="btn quiet danger-text"
               onClick={() => dispatch({ type: 'confirm', kind: { kind: 'cutOff', profileId: profile.id } })}
               aria-label={copy.cutOffThisPerson}
             >
-              {copy.cutOff}
+              <Scissors size={14} aria-hidden /> {copy.cutOff}
             </button>
           </div>
         )

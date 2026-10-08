@@ -19,6 +19,11 @@ export type Action =
   | { type: 'shareMoment'; body: string }
   | { type: 'shareVibe'; label: string }
   | { type: 'saveMoment'; postId: string }
+  | { type: 'takeBackCrush'; profileId: string }
+  | { type: 'markAlertsRead' }
+  | { type: 'setTyping'; profileId: string | null }
+  | { type: 'whisperReply'; profileId: string; body: string }
+  | { type: 'toggleVerified' }
   | { type: 'updateMe'; patch: Partial<State['me']> }
   | { type: 'completeOnboarding' }
   | { type: 'setPreference'; key: 'discoverable' | 'showDistance' | 'showOnlineStatus'; value: boolean }
@@ -27,3 +32,6 @@ export type Action =
   | { type: 'dismissAlert'; id: number }
 
 export type Dispatch = (a: Action) => void
+
+/** Which full-screen panel is open above the tab shell. */
+export type Overlay = 'none' | 'alerts' | 'activity' | 'settings' | 'edit'

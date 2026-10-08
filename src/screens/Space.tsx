@@ -1,184 +1,124 @@
 import { useState } from 'react'
-import { AboutMe, Avatar, Chip, EmptyState, SectionTitle, VerifiedMark } from '../components/ui'
+import { BadgeCheck, Bookmark, Users } from 'lucide-react'
+import { AboutMe, Avatar, Chip, EmptyState, SectionTitle, TimeAgo, VerifiedMark } from '../components/ui'
 import { copy } from '../language/crushly'
+import type { Overlay } from '../state/types'
 import type { Props } from './types'
 
 /**
- * §7 — a profile is a Space. §27 — privacy controls live here, in the open.
- * §29 — Space Settings / Crush Preferences / Around Settings naming.
+ * §7 — a Space, not a profile. §27 — privacy controls live in Settings, which
+ * this screen opens rather than reimplementing.
  */
-export function SpaceScreen({ ui, dispatch }: Props) {
+export function SpaceScreen({ ui, dispatch, onOpen }: Props & { onOpen: (o: Overlay) => void }) {
   const s = ui.state
-  const [panel, setPanel] = useState<null | 'settings' | 'cut' | 'circle'>(null)
+  const [showCircle, setShowCircle] = useState(false)
 
   const closeOnes = s.profiles.filter((p) => s.followers[p.id] && !s.blocks[p.id])
   const keeping = s.profiles.filter((p) => s.following[p.id] && !s.blocks[p.id])
   const circle = s.profiles.filter((p) => s.friends[p.id] && !s.blocks[p.id])
   const saved = s.posts.filter((p) => p.saved)
   const myMoments = s.posts.filter((p) => p.authorId === 'me')
-  const cutOff = s.profiles.filter((p) => s.blocks[p.id])
+  const myVibes = s.stories.filter((x) => x.authorId === 'me')
 
   return (
     <div className="screen">
       <header className="head">
         <div>
           <h1>{copy.mySpace}</h1>
-          <p className="muted">@{s.me.username}</p>
+          <p className="muted">@{s.me.username} · {s.me.pronouns}</p>
         </div>
-        <button className="btn quiet tiny" onClick={() => setPanel(panel === 'settings' ? null : 'settings')}>
+        <button className="btn quiet tiny" onClick={() => onOpen('settings')} aria-label={copy.spaceSettings}>
           {copy.spaceSettings}
         </button>
       </header>
 
       <div className="me-card">
-        <div className="me-photo" style={{ backgroundImage: `linear-gradient(150deg, hsl(${s.me.hue} 70% 52%), hsl(${(s.me.hue + 60) % 360} 62% 26%))` }}>
+        <div
+          className="me-photo"
+          style={{ backgroundImage: `linear-gradient(150deg, hsl(${s.me.hue} 70% 52%), hsl(${(s.me.hue + 60) % 360} 62% 26%))` }}
+        >
           <Avatar name={s.me.name} hue={s.me.hue} size={72} src={s.me.photoUrl} />
-          <p className="space-name">{s.me.name}, {s.me.age} <VerifiedMark verified={s.me.verified} name={s.me.name} /></p>
-          <p className="space-sub">{s.me.pronouns} · {s.me.area}</p>
+          <p className="space-name">
+            {s.me.name || 'Your name'}, {s.me.age} <VerifiedMark verified={s.me.verified} name={s.me.name} />
+          </p>
+          <p className="space-sub">{s.me.area}</p>
         </div>
+
         <div className="me-stats">
-          <span><strong>{closeOnes.length}</strong>{copy.yourCloseOnes}</span>
-          <span><strong>{keeping.length}</strong>{copy.peopleKeepingClose}</span>
-          <span><strong>{circle.length}</strong>{copy.yourCircle}</span>
-          <span><strong>{s.matches.length}</strong>{copy.clicksLabel}</span>
+          <button onClick={() => onOpen('activity')}>
+            <strong>{ui.incoming.length}</strong>
+            {copy.crushesTab}
+          </button>
+          <button onClick={() => onOpen('activity')}>
+            <strong>{s.matches.length}</strong>
+            {copy.clicksLabel}
+          </button>
+          <button onClick={() => onOpen('activity')}>
+            <strong>{closeOnes.length}</strong>
+            {copy.yourCloseOnes}
+          </button>
+          <button onClick={() => onOpen('alerts')}>
+            <strong>{s.notifications.filter((n) => !n.read).length}</strong>
+            {copy.alertsTitle}
+          </button>
         </div>
+
         <AboutMe text={s.me.about} />
         <div className="chips">
           {s.me.lookingFor.map((i) => <Chip key={i} tone="shared">{i}</Chip>)}
           {s.me.interests.map((i) => <Chip key={i}>{i}</Chip>)}
         </div>
+
         <div className="me-actions">
-          <button className="btn">{copy.editSpace}</button>
-          <button className="btn quiet">{copy.shareSpace}</button>
+          <button className="btn" onClick={() => onOpen('edit')}>{copy.editSpace}</button>
           <button className="btn quiet">
-            {s.me.verified ? copy.verifiedSpace : copy.verifyYourSpace}
+            {s.me.verified ? <><BadgeCheck size={15} aria-hidden /> {copy.verifiedSpace}</> : copy.verifyYourSpace}
           </button>
         </div>
       </div>
 
-      {panel === 'settings' ? (
-        <div className="panel">
-          <SectionTitle>{copy.crushPreferences}</SectionTitle>
-          <div className="chips">
-            {copy.lookingOptions.map((o) => {
-              const on = s.me.lookingFor.includes(o)
-              return (
-                <button key={o} className={on ? 'chip selectable on' : 'chip selectable'} aria-pressed={on} disabled>
-                  {o}
-                </button>
-              )
-            })}
-          </div>
-
-          <SectionTitle>{copy.privacy}</SectionTitle>
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={s.me.discoverable}
-              onChange={(e) => dispatch({ type: 'setPreference', key: 'discoverable', value: e.target.checked })}
-            />
-            <span>{copy.discoverMeToggle}</span>
-          </label>
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={s.me.showDistance}
-              onChange={(e) => dispatch({ type: 'setPreference', key: 'showDistance', value: e.target.checked })}
-            />
-            <span>{copy.distanceToggle}</span>
-          </label>
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={s.me.showOnlineStatus}
-              onChange={(e) => dispatch({ type: 'setPreference', key: 'showOnlineStatus', value: e.target.checked })}
-            />
-            <span>{copy.onlineToggle}</span>
-          </label>
-
-          <SectionTitle>{copy.cutOffListTitle}</SectionTitle>
-          <button className="btn quiet wide" onClick={() => setPanel('cut')}>
-            {cutOff.length ? `${cutOff.length} ${copy.peopleCutOff}` : copy.noneCutOff}
+      <SectionTitle
+        action={
+          <button className="btn quiet tiny" onClick={() => setShowCircle((v) => !v)} aria-expanded={showCircle}>
+            {copy.yourCircle}
           </button>
-
-          <SectionTitle>{copy.account}</SectionTitle>
-          <button
-            className="btn quiet wide"
-            onClick={() => dispatch({ type: 'updateMe', patch: { onboarded: false } })}
-          >
-            {copy.obRestart}
-          </button>
-          <div className="list-links">
-            <span>{copy.security}</span>
-            <span>{copy.communityGuidelines}</span>
-            <span className="danger-text">{copy.deleteAccount}</span>
-          </div>
+        }
+      >
+        {copy.peopleKeepingClose}
+      </SectionTitle>
+      {keeping.length ? (
+        <div className="chips">
+          {keeping.map((p) => (
+            <span key={p.id} className="chip person">
+              <Avatar name={p.name} hue={p.hue} size={22} /> {p.name}
+              <button className="mini tiny" onClick={() => dispatch({ type: 'letGo', profileId: p.id })} aria-label={copy.letGo}>
+                ✕
+              </button>
+            </span>
+          ))}
         </div>
-      ) : panel === 'cut' ? (
+      ) : (
+        <EmptyState title={copy.emptyCloseOnes} hint={copy.emptyCircle} />
+      )}
+
+      {showCircle ? (
         <div className="panel">
-          <SectionTitle action={<button className="btn quiet tiny" onClick={() => setPanel(null)}>Back</button>}>
-            {copy.cutOffListTitle}
-          </SectionTitle>
-          {cutOff.length ? (
+          <SectionTitle>{copy.yourCircle}</SectionTitle>
+          {circle.length ? (
             <ul className="rows">
-              {cutOff.map((p) => (
+              {circle.map((p) => (
                 <li key={p.id}>
-                  <div className="row">
-                    <Avatar name={p.name} hue={p.hue} size={42} />
+                  <button className="row" onClick={() => dispatch({ type: 'openSpace', profileId: p.id })}>
+                    <Avatar name={p.name} hue={p.hue} size={38} />
                     <span className="row-main">
                       <span className="row-name">{p.name}</span>
                       <span className="row-sub">{p.area}</span>
                     </span>
-                    <button className="btn tiny" onClick={() => dispatch({ type: 'letBackIn', profileId: p.id })}>
-                      {copy.letBackIn}
-                    </button>
-                  </div>
+                    <Users size={15} aria-hidden />
+                  </button>
                 </li>
               ))}
             </ul>
-          ) : (
-            <EmptyState title={copy.noneCutOff} />
-          )}
-        </div>
-      ) : null}
-
-      <SectionTitle action={
-        <button className="btn quiet tiny" onClick={() => setPanel(panel === 'circle' ? null : 'circle')}>
-          {copy.yourCircle}
-        </button>
-      }>
-        {copy.yourCloseOnes}
-      </SectionTitle>
-      {closeOnes.length ? (
-        <div className="chips">
-          {closeOnes.map((p) => (
-            <button key={p.id} className="chip person" onClick={() => dispatch({ type: 'openSpace', profileId: p.id })}>
-              <Avatar name={p.name} hue={p.hue} size={22} /> {p.name}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <EmptyState title={copy.emptyCloseOnes} />
-      )}
-
-      {panel === 'circle' ? (
-        <div className="panel">
-          <SectionTitle>{copy.yourCircle}</SectionTitle>
-          {circle.length ? (
-            <div className="chips">
-              {circle.map((p) => (
-                <span key={p.id} className="chip person">
-                  <Avatar name={p.name} hue={p.hue} size={22} /> {p.name}
-                  <button
-                    className="mini tiny"
-                    onClick={() => dispatch({ type: 'letGo', profileId: p.id })}
-                    aria-label={copy.leaveCircle}
-                  >
-                    ✕
-                  </button>
-                </span>
-              ))}
-            </div>
           ) : (
             <EmptyState title={copy.emptyCircle} hint={copy.circleHint} />
           )}
@@ -192,7 +132,7 @@ export function SpaceScreen({ ui, dispatch }: Props) {
             <article key={p.id} className="moment compact">
               <p>{p.body}</p>
               <button className="btn quiet tiny" onClick={() => dispatch({ type: 'saveMoment', postId: p.id })}>
-                {copy.unsaveMoment}
+                <Bookmark size={13} aria-hidden /> {copy.unsaveMoment}
               </button>
             </article>
           ))}
@@ -206,6 +146,7 @@ export function SpaceScreen({ ui, dispatch }: Props) {
         <div className="moments">
           {myMoments.map((p) => (
             <article key={p.id} className="moment compact">
+              <TimeAgo seconds={p.secondsSinceShare} />
               <p>{p.body}</p>
               <p className="counts">{p.likes} Crushes · {p.comments} Whispers</p>
             </article>
@@ -213,6 +154,15 @@ export function SpaceScreen({ ui, dispatch }: Props) {
         </div>
       ) : (
         <EmptyState title={copy.emptyMoments} hint={copy.momentHint} />
+      )}
+
+      <SectionTitle>{copy.vibes}</SectionTitle>
+      {myVibes.length ? (
+        <div className="chips">
+          {myVibes.map((v) => <Chip key={v.id} tone="shared">{v.label}</Chip>)}
+        </div>
+      ) : (
+        <EmptyState title={copy.emptyVibes} hint={copy.shareVibe} />
       )}
     </div>
   )

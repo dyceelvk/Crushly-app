@@ -340,10 +340,7 @@ h1, h2, h3, p { margin: 0; }
 .space-photo .dist { align-self: flex-start; }
 .space-name { font-size: 19px; font-weight: 720; display: flex; align-items: center; gap: 7px; }
 .space-sub { font-size: 12.5px; color: rgb(255 255 255 / 82%); }
-.vmark {
-  display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%;
-  background: var(--amber); color: #2b1600; font-size: 11px; font-weight: 800;
-}
+.vmark { color: var(--amber); vertical-align: -2px; }
 
 .tabs { display: flex; gap: 6px; }
 .tab { flex: 1; padding: 9px; border-radius: 11px; color: var(--muted); font-size: 13px; }
@@ -378,8 +375,9 @@ h1, h2, h3, p { margin: 0; }
 .me-photo { position: relative; margin: -14px -14px 0; padding: 16px; display: grid; gap: 3px; justify-items: center; text-align: center; border-radius: 22px 22px 0 0; }
 .me-photo .avatar { margin-bottom: 4px; }
 .me-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
-.me-stats span { display: grid; gap: 1px; font-size: 10.5px; color: var(--muted); }
-.me-stats strong { font-size: 18px; color: var(--text); }
+.me-stats button { display: grid; gap: 1px; font-size: 10.5px; color: var(--muted); padding: 6px 2px; border-radius: 11px; }
+.me-stats button:hover { background: rgb(255 255 255 / 5%); color: var(--text); }
+.me-stats strong { font-size: 18px; color: var(--text); display: block; }
 .me-actions { display: flex; gap: 8px; }
 .me-actions .btn { flex: 1; }
 .panel { display: grid; gap: 10px; padding: 13px; border-radius: var(--radius); background: #100d18; border: 1px solid var(--line); }
@@ -470,3 +468,92 @@ h1, h2, h3, p { margin: 0; }
 .err.clear { color: var(--muted); }
 .btn.primary { background: linear-gradient(135deg, var(--rose), #d4368f); border-color: transparent; color: #fff; padding: 13px 22px; border-radius: 14px; font-size: 15px; }
 .btn.primary.wide { min-width: 170px; }
+
+
+/* ---------- top bar ---------- */
+.topbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px 10px; border-bottom: 1px solid var(--line);
+  background: rgb(14 10 20 / 78%); backdrop-filter: blur(14px);
+}
+.brand {
+  width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px;
+  font-weight: 800; font-size: 14px; color: #fff;
+  background: linear-gradient(140deg, var(--rose), var(--violet));
+}
+.brand-word { font-weight: 720; letter-spacing: -.3px; font-size: 15px; }
+.grow { flex: 1; }
+.topbtn {
+  position: relative; width: 36px; height: 36px; display: grid; place-items: center;
+  border-radius: 50%; color: var(--muted); background: rgb(255 255 255 / 5%);
+  border: 1px solid var(--line);
+}
+.topbtn:hover { color: var(--text); background: rgb(255 255 255 / 9%); }
+.topbadge {
+  position: absolute; top: -3px; right: -3px; min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 8px; background: var(--rose); color: #fff;
+  font-size: 9.5px; font-weight: 800; display: grid; place-items: center;
+  box-shadow: 0 0 0 2px #0f0b16;
+}
+.topbadge.violet { background: var(--violet); }
+
+/* ---------- panels (alerts / activity / settings) ---------- */
+.panel-stack { display: grid; gap: 12px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.setrow { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 12px 13px; }
+.row-chev { color: var(--muted); flex: none; }
+.row.unread { background: linear-gradient(100deg, #241333, #191225); }
+.row-sub.strong { color: var(--text); font-size: 13.5px; }
+.row-sub.faint { font-size: 11.5px; }
+.unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rose); flex: none; }
+.icon-bubble {
+  width: 27px; height: 27px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  background: var(--rose); color: #fff; box-shadow: 0 0 0 2px #14102080;
+}
+.icon-bubble[data-kind='click'] { background: var(--violet); }
+.icon-bubble[data-kind='bigCrush'] { background: var(--amber); color: #2b1600; }
+.icon-bubble[data-kind='whisper'] { background: #2f8f6f; }
+.icon-bubble[data-kind='keepClose'] { background: #3b6ea8; }
+.icon-bubble[data-kind='vibe'], .icon-bubble[data-kind='moment'] { background: #6b5aa6; }
+
+.segbar { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.segbar::-webkit-scrollbar { display: none; }
+.seg {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px;
+  border-radius: 999px; background: var(--panel); border: 1px solid var(--line);
+  color: var(--muted); font-size: 12.5px; font-weight: 650; white-space: nowrap;
+}
+.seg.on { color: #fff; background: linear-gradient(135deg, var(--rose), var(--violet)); border-color: transparent; }
+.seg-count { padding: 1px 6px; border-radius: 999px; background: rgb(255 255 255 / 12%); font-size: 11px; }
+.seg.on .seg-count { background: rgb(0 0 0 / 22%); }
+
+.findbar-icon { color: var(--muted); display: grid; place-items: center; }
+.typing { color: var(--rose); font-style: normal; animation: pulse 1.1s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+.panel-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn.primary { background: linear-gradient(135deg, var(--rose), #d4368f); border-color: transparent; color: #fff; }
+
+/* ---------- motion (borrowed from the parallel build, with a guard) ---------- */
+@keyframes pop-in {
+  0% { transform: scale(.6); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.pop-in { animation: pop-in .34s cubic-bezier(.2, .9, .3, 1.2) both; }
+@keyframes float-up { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+.screen > * { animation: float-up .34s ease both; }
+.alert { animation-name: pop-in; }
+.btn:active:not(:disabled) { transform: scale(.97); }
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.16); }
+  45% { transform: scale(1); }
+  60% { transform: scale(1.1); }
+}
+.btn.crush:not(:disabled):active { animation: heartbeat .6s ease; }
+
+/* §43 also asks for accessibility labels — these two matter most. */
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}

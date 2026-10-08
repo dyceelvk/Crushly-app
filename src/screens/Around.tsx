@@ -1,3 +1,4 @@
+import { Heart, MapPin, Users } from 'lucide-react'
 import { Avatar, Chip, DistanceTag, EmptyState, SectionTitle, VerifiedMark } from '../components/ui'
 import { copy, describeDistance } from '../language/crushly'
 import type { Props } from './types'
@@ -23,7 +24,7 @@ export function AroundScreen({ ui, dispatch }: Props) {
       </header>
 
       <div className="privacy-note">
-        <span aria-hidden>⌖</span>
+        <span aria-hidden><MapPin size={17} /></span>
         <p>{copy.aroundHint}</p>
         <button className="btn quiet tiny" onClick={() => dispatch({ type: 'setPreference', key: 'showDistance', value: !s.me.showDistance })}>
           {s.me.showDistance ? 'Hide distance' : copy.distanceToggle}
@@ -59,14 +60,14 @@ export function AroundScreen({ ui, dispatch }: Props) {
                   onClick={() => dispatch({ type: 'crush', profileId: p.id, big: false })}
                   aria-label={copy.sendCrush}
                 >
-                  ♥
+                  <Heart size={13} fill={s.likes[p.id] ? 'currentColor' : 'none'} />
                 </button>
                 <button
                   className={s.following[p.id] ? 'mini on' : 'mini'}
                   onClick={() => dispatch({ type: s.following[p.id] ? 'letGo' : 'keepClose', profileId: p.id })}
                   aria-label={s.following[p.id] ? copy.letGo : copy.keepClose}
                 >
-                  ◎
+                  <Users size={13} />
                 </button>
               </span>
             </li>

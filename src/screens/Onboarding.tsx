@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import { Avatar, Chip } from '../components/ui'
 import { copy } from '../language/crushly'
 import { AREAS, INTEREST_POOL, PRONOUN_OPTIONS } from '../data/mock'
@@ -91,7 +92,7 @@ export function OnboardingScreen({ ui, dispatch }: Props) {
           onClick={() => setStep(STEPS[Math.max(0, index - 1)])}
           disabled={index === 0}
         >
-          ← {copy.obBack}
+          <ArrowLeft size={14} aria-hidden /> {copy.obBack}
         </button>
         <span className="muted">{copy.obStep(index + 1, STEPS.length)}</span>
         <span className="onb-dots" aria-hidden>

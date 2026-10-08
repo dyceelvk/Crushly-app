@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Bookmark, Heart, MessageCircleHeart, Plus } from 'lucide-react'
 import { Avatar, Chip, EmptyState, SectionTitle, TimeAgo } from '../components/ui'
 import { copy } from '../language/crushly'
 import { byId } from '../data/mock'
@@ -29,7 +30,7 @@ export function FlowScreen({ ui, dispatch }: Props) {
           onClick={() => setComposer((v) => !v)}
           aria-label={copy.shareVibe}
         >
-          <span className="vibe-plus">+</span>
+          <span className="vibe-plus"><Plus size={17} /></span>
           <span className="vibe-name">{copy.shareVibe}</span>
         </button>
         {order.map((p) => {
@@ -129,7 +130,7 @@ export function FlowScreen({ ui, dispatch }: Props) {
                   onClick={() => dispatch({ type: 'saveMoment', postId: p.id })}
                   aria-label={p.saved ? copy.unsaveMoment : copy.saveMoment}
                 >
-                  {p.saved ? '★' : '☆'}
+                  <Bookmark size={16} fill={p.saved ? 'currentColor' : 'none'} />
                 </button>
               </header>
               <p className="moment-body">{p.body}</p>
@@ -139,9 +140,9 @@ export function FlowScreen({ ui, dispatch }: Props) {
                   onClick={() => author && dispatch({ type: 'crush', profileId: author.id, big: false })}
                   aria-label={copy.sendCrush}
                 >
-                  ♥ {p.likes + (s.likes[p.authorId] ? 1 : 0)}
+                  <Heart size={14} fill={s.likes[p.authorId] ? 'currentColor' : 'none'} /> {p.likes + (s.likes[p.authorId] ? 1 : 0)}
                 </button>
-                <span className="act quiet">💬 {p.comments} {copy.whispers.toLowerCase()}</span>
+                <span className="act quiet"><MessageCircleHeart size={14} /> {p.comments} {copy.whispers.toLowerCase()}</span>
               </footer>
             </article>
           )

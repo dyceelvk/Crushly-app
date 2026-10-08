@@ -64,6 +64,16 @@ export interface Match {
   createdAt: string
 }
 
+/** Internal name is `notifications`; the UI calls this Crush Alerts (§3, §21). */
+export interface NotificationEntry {
+  id: string
+  kind: 'crush' | 'bigCrush' | 'click' | 'keepClose' | 'whisper' | 'vibe' | 'moment'
+  profileId: string
+  text: string
+  at: number
+  read: boolean
+}
+
 export interface State {
   me: {
     id: string
@@ -82,6 +92,11 @@ export interface State {
     showOnlineStatus: boolean
     /** §30 — authentication terms stay standard. */
     ageVerified: boolean
+    /** §27 — who can start a Whisper with me. */
+    whisperPermission: 'Everyone' | 'Clicks only'
+    /** §6 — discovery preferences. */
+    ageRange: [number, number]
+    maxDistanceKm: number
     hue: number
     /** §4 — onboarding is a real, incomplete-or-complete state, not a splash. */
     onboarded: boolean
@@ -104,6 +119,9 @@ export interface State {
   blocks: Record<string, boolean>
   flags: Record<string, boolean>
   dismissed: Record<string, boolean>
+  notifications: NotificationEntry[]
+  /** §17 — "Whispering…" is the UI word for a typing indicator. */
+  typingProfileId: string | null
 }
 
 const profiles: Profile[] = [
@@ -188,6 +206,7 @@ export const initialState: State = {
     lookingFor: ['Dating', 'Something Serious'],
     verified: true, discoverable: true, showDistance: true, showOnlineStatus: true,
     ageVerified: true, hue: 12, onboarded: true, photoUrl: null,
+    whisperPermission: 'Clicks only', ageRange: [22, 38], maxDistanceKm: 35,
   },
   profiles,
   likes: {},
@@ -219,6 +238,14 @@ export const initialState: State = {
   blocks: {},
   flags: {},
   dismissed: {},
+  notifications: [
+    { id: 'n1', kind: 'crush', profileId: 'p1', text: '', at: Date.now() - 1000 * 60 * 7, read: false },
+    { id: 'n2', kind: 'bigCrush', profileId: 'p6', text: '', at: Date.now() - 1000 * 60 * 41, read: false },
+    { id: 'n3', kind: 'click', profileId: 'p3', text: '', at: Date.now() - 1000 * 60 * 60 * 26, read: true },
+    { id: 'n4', kind: 'vibe', profileId: 'p5', text: '', at: Date.now() - 1000 * 60 * 60 * 30, read: true },
+    { id: 'n5', kind: 'moment', profileId: 'p6', text: '', at: Date.now() - 1000 * 60 * 60 * 51, read: true },
+  ],
+  typingProfileId: null,
 }
 
 export const byId = (s: State, id: string): Profile =>
