@@ -1,387 +1,413 @@
 /**
- * Crushly language layer (Crushlyapp.prmpt §3, §12–§25).
+ * Crushly language layer.
  *
- * Rule §38: internal names stay conventional; ONLY the user-facing words change.
- * So this module is a translation boundary, not a rename of the data model.
- * Every string rendered to a user should come from `copy` below, which lets
- * `scripts/audit-language.mjs` enforce §43 (no stray generic dating terms).
+ * Direction: `Crushly.luxury-brief.md` §7. Internal names stay conventional;
+ * ONLY the user-facing words change. This module is a translation boundary,
+ * not a rename of the data model. Every string rendered to a user comes from
+ * `copy` below, which lets `scripts/audit-language.mjs` enforce the
+ * vocabulary (no stray generic dating terms).
  */
 
-/** Internal (conventional) -> user-facing term. §3, §43. */
+/** Internal (conventional) -> user-facing term. */
 export const TERMS = {
   like: 'Crush',
   likes: 'Crushes',
   liked: 'Crushed',
-  superLike: 'Big Crush',
-  superLikes: 'Big Crushes',
-  match: 'Click',
-  matches: 'Clicks',
-  matched: 'Clicked',
+  superLike: 'Deep Crush',
+  superLikes: 'Deep Crushes',
+  match: 'Mutual Crush',
+  matches: 'Mutual Crushes',
+  matched: 'Mutual Crush',
   follow: 'Keep Close',
   following: 'Keeping Close',
   follower: 'Close One',
   followers: 'Close Ones',
-  message: 'Whisper',
-  messages: 'Whispers',
+  message: 'Message',
+  messages: 'Messages',
   post: 'Moment',
   posts: 'Moments',
-  story: 'Vibe',
-  stories: 'Vibes',
-  feed: 'Flow',
-  profile: 'Space',
-  profiles: 'Spaces',
+  story: 'Moment',
+  stories: 'Moments',
+  feed: 'Moments',
+  profile: 'Profile',
+  profiles: 'Profiles',
   friend: 'Circle',
-  friends: 'Circles',
+  friends: 'Circle',
   explore: 'Discover',
   search: 'Find',
-  nearby: 'Around',
-  unmatch: 'Unclick',
+  nearby: 'Near you',
+  unmatch: 'Remove connection',
   unfollow: 'Let Go',
-  block: 'Cut Off',
-  report: 'Flag',
-  notifications: 'Crush Alerts',
+  block: 'Block',
+  report: 'Report',
+  notifications: 'Notifications',
 } as const
 
 /**
- * Terms that must never appear in a user-facing string. §24, §43.
- * Deliberately excludes auth/legal words that §30/§31 keep standard.
+ * Terms that must never appear in a user-facing string.
+ * Note what the luxury brief UN-bans: message(s), conversation(s),
+ * profile(s), notification(s), nearby and bio are the product's own words
+ * now. What stays banned is the vocabulary the brief replaces.
  */
 export const BANNED_UI_TERMS = [
   'like', 'likes', 'liked', 'unlike',
   'super like', 'super likes', 'super liked',
-  'match', 'matches', 'matched', 'unmatch', 'matching',
+  'match', 'matches', 'matched', 'matching', 'unmatch',
+  'swipe', 'swipes', 'swiping',
   'follow', 'follows', 'followed', 'following', 'follower', 'followers', 'unfollow',
-  'message', 'messages', 'messaging', 'inbox',
   'post', 'posts', 'posted', 'posting',
   'story', 'stories',
   'feed',
-  'conversation', 'conversations',
-  'profile', 'profiles',
   'explore',
-  'nearby',
-  'notification', 'notifications',
+  'inbox',
 ] as const
 
-/** Main navigation. §41. */
-export const NAV = ['Flow', 'Discover', 'Around', 'Whispers', 'Space'] as const
+/** Main navigation. Luxury brief §3. */
+export const NAV = ['Discover', 'Crushes', 'Messages', 'Moments', 'Profile'] as const
 
-/** Approved user-facing copy, phrased to satisfy §39 (natural, never awkward). */
+/** Approved user-facing copy — confident, modern, human (brief §27). */
 export const copy = {
-  // Actions on a discovery card. §23 — kept to five so the card is not overloaded.
-  sendCrush: 'Send Crush',
-  sendBigCrush: 'Send Big Crush',
-  keepClose: 'Keep Close',
-  letGo: 'Let Go',
-  sendWhisper: 'Send Whisper',
-  viewSpace: 'View Space',
-  shareSpace: 'Share Space',
-  editSpace: 'Edit Space',
-  flagSpace: 'Flag Space',
-  cutOff: 'Cut Off',
+  // ── splash (§4) ──
+  splashTagline: 'Find your connection.',
+  entering: 'Entering Crushly…',
 
-  // Empty states. §25 — verbatim, including the approved example lines.
-  emptyCrushes: 'No Crushes yet. Someone interesting could be Around.',
-  emptyClicks: 'No Clicks yet. Keep discovering.',
-  emptyWhispers: 'No Whispers yet.',
-  emptyCloseOnes: "You're not Keeping anyone Close yet.",
-  emptyCircle: 'Your Circle is still growing.',
-  emptyMoments: 'No Moments yet.',
-  emptyVibes: 'No Vibes yet.',
-  emptyFind: 'Nothing came up.',
-  emptyAround: 'No one Around right now.',
-  emptyFlow: 'Your Flow is quiet.',
-
-  // Click + Crush alerts. §21
-  clickAlert: (name: string) => `You Clicked with ${name}.`,
-  crushAlert: (name: string) => `${name} sent you a Crush.`,
-  bigCrushAlert: (name: string) => `${name} sent you a Big Crush.`,
-  keepCloseAlert: (name: string) => `${name} wants to Keep Close.`,
-  newWhisperAlert: 'You have a new Whisper.',
-  vibeAlert: (name: string) => `${name} shared a new Vibe.`,
-  momentAlert: (name: string) => `${name} shared a Moment.`,
-
-  // Connection flow copy. §33, §42
-  startWhisper: 'Start a Whisper',
-  whispering: 'Whispering…',
-  unclick: 'Unclick',
-  unclickHint: 'You can start again later if you both send a Crush.',
-
-  // Around. §11 — approximate only, never exact coordinates.
-  aroundNow: 'Around Now',
-  myArea: 'My Area',
-  aroundSettings: 'Around Settings',
-  distanceBucket: (bucket: string) => bucket,
-  lessThanKm: 'Less than 1 km away',
-  aroundYourArea: 'Around your area',
-
-  // Find / Discover. §9, §10
-  findMen: 'Find men',
-  findResults: 'Find Results',
-  filters: 'Filters',
-  moreFilters: 'More Filters',
-  crushPicks: 'Crush Picks',
-  peopleYouMightCrush: 'People You Might Crush',
-  peopleYouMightClickWith: 'People You might Click with',
-  peopleAroundYou: 'People Around you',
-  recentlyActive: 'Recently Active',
-  newOnCrushly: 'New on Crushly',
-  popularSpaces: 'Popular Spaces',
-  similarInterests: 'People with similar interests',
-  sharedInterests: 'Shared interests',
-
-  // Sharing. §18, §19
-  shareMoment: 'Share a Moment',
-  shareVibe: 'Share a Vibe',
-  savedMoments: 'Saved Moments',
-  vibes: 'Vibes',
-
-  // Space. §7
-  aboutMe: 'About Me',
-  lookingFor: 'Looking For',
-  spaceVisibility: 'Space Visibility',
-  verifiedSpace: 'Verified Space',
-  verifyYourSpace: 'Verify your Space',
-  yourCloseOnes: 'Your Close Ones',
-  peopleKeepingClose: "People you're Keeping Close",
-  yourCircle: 'Your Circle',
-  crushHistory: 'Crush History',
-
-  // Safety. §26 — clarity wins over branding for serious actions.
-  cutOffConfirmTitle: 'Cut off this person?',
-  cutOffConfirmBody: 'Cutting someone off prevents them from interacting with you. They will not be told you cut them off.',
-  cutOffThisPerson: 'Cut Off this person',
-  letBackIn: 'Let Back In',
-  cutOffListTitle: "People you've cut off",
-  flagConfirmTitle: 'Flag this Space for review?',
-  flagConfirmBody: 'Our moderators will review it. You can still cut them off now if you want it to stop immediately.',
-  flagForReview: 'Flag this account for review',
-
-
-  // §14, §26 — Unclick keeps the branding but the consequence is stated plainly.
-  unclickConfirmTitle: (name: string) => `Unclick ${name}?`,
-  unclickConfirmBody: 'You will not be able to Whisper any more. If you both send a Crush again, a Click can happen.',
-  unclickConfirmAction: 'Unclick',
-  // Consent. §35
-  crushSent: (name: string) => `Crush sent to ${name}.`,
-  bigCrushSent: (name: string) => `Big Crush sent to ${name}.`,
-  keptClose: (name: string) => `You are Keeping ${name} Close.`,
-
-  // Counts and small labels.
-  clicksLabel: 'Clicks',
-  yourMoments: 'Moments you shared',
-  momentHint: 'Your next Moment could be the one someone replies to.',
-  threadsSingular: 'Whisper',
-  threadsPlural: 'Whispers',
-  clickedWith: 'Clicked',
-  // §25's example copy said "conversation" here, which §17 bans. Fixed.
-  emptyWhispersHint: 'Your next Whisper could start here.',
-  typingHint: 'A Whisper needs a Click first — that is how consent works here.',
-  peopleCutOff: 'people',
-  noneCutOff: 'No one is cut off.',
-  leaveCircle: 'Remove from your Circle',
-  circleHint: 'Circles grow out of Whispers, not requests.',
-  discoverCta: 'Find someone to talk to',
-
-  // Age gate. §36
-  ageGateTitle: 'Crushly is for adults',
-  ageGateBody: 'Crushly is a dating and social app for people 18 and over. Dating, Crushes and Whispers are only available once your age is confirmed.',
+  // ── age gate ──
+  ageGateTitle: 'Before you enter',
+  ageGateBody: 'Crushly is a private space for men who are 18 or older.',
   ageGateConfirm: 'I am 18 or older',
-  ageGateDecline: 'I am under 18',
-  ageGateNote: 'We ask for a date of birth, not documents.',
+  ageGateDecline: 'I am not yet 18',
+  ageGateNote: 'Your age stays private. Discovery only ever uses your age group.',
 
-  // Flow / Discover surface copy.
-  discoverTitle: 'Discover',
-  crushAlerts: 'Crush Alerts',
-  vibeRailLabel: 'Vibes',
-  yourVibe: 'Your Vibe',
-  vibePlaceholder: 'What is the vibe right now?',
-  momentPlaceholder: 'Share a moment with your Circles',
-  saveMoment: 'Save Moment',
-  unsaveMoment: 'Remove saved Moment',
-  menLabel: 'men',
-  findPlaceholder: 'Find men by name, interest or area',
-  clearFind: 'Clear what you typed',
-  findHint: 'Try widening your distance or dropping a filter.',
-  distanceUpTo: 'Up to {km} km away',
-  verifiedSpaces: 'Verified Spaces',
-  lastActive: '{n}',
-  pass: 'Not now',
-  distanceHidden: 'Distance hidden',
+  // ── welcome (§5) ──
+  obWelcomeTitle: 'Welcome to Crushly',
+  obWelcomeTag: 'Meet men. Make connections. Follow the feeling.', // audit-allow: the brief's branded welcome line (§5)
+  obGetStarted: 'Get Started',
+  obHaveAccount: 'I already have an account',
+  obNoAuth: 'Accounts are not in this build yet — your profile lives on this device for now.',
 
-  // Around. §11
-  aroundTitle: 'Around',
-  aroundHint: 'Only your approximate area is ever shown to other people.',
-  activeNow: 'Active now',
-
-  // Whispers. §17
-  whispersTitle: 'Whispers',
-  whisperRequests: 'Whisper Requests',
-  waitingOnClick: 'Waiting for a Click',
-  startTheWhisper: 'Start the Whisper',
-
-  // Space. §7, §27, §28
-  mySpace: 'My Space',
-  ageLabel: 'Age',
-  pronounsLabel: 'Pronouns',
-  discoverMeToggle: 'Show my Space in Discover',
-  distanceToggle: 'Show approximate distance',
-  onlineToggle: 'Show when I am Around',
-  settingsTitle: 'Settings',
-
-  // Crush Alerts log. §21 — the only word for notifications on screen.
-  alertsTitle: 'Crush Alerts',
-  alertsEmpty: 'No Crush Alerts yet. When something happens, it lands here.',
-  alertsUnread: (n: number) => `${n} unread ${n === 1 ? 'Crush Alert' : 'Crush Alerts'}`,
-  alertsCaughtUp: 'All caught up',
-  markAllRead: 'Mark all read',
-  crushTakenBack: (name: string) => `Crush taken back from ${name}.`,
-  takeBackCrush: 'Take Back Crush',
-  unreadLabel: 'Unread',
-  crushesTab: 'Crushes',
-  crushBackHint: 'Crush back to Click',
-  closeOneSince: 'One of your Close Ones',
-  circleSince: 'In your Circle',
-  awaitingReply: 'Waiting for a Crush back',
-  save: 'Save',
-  alertTime: (mins: number) => (mins < 1 ? 'now' : mins < 60 ? `${mins} min ago` : mins < 1440 ? `${Math.round(mins / 60)} hr ago` : `${Math.round(mins / 1440)} d ago`),
-
-  // Activity hub. §12, §14, §15, §16
-  activityTitle: 'Crushes · Clicks · Close Ones',
-  tabSentYou: 'Sent you a Crush — Crush back to Click',
-  tabCrushHistory: 'Crush History',
-  tabClickHistory: 'Click History',
-  tabCloseOnes: 'Your Close Ones',
-  tabKeeping: "People you're Keeping Close",
-  crushedBack: 'Crushed back',
-  noActivity: 'Nothing here yet.',
-
-  // Settings rows. §27, §28, §29
-  verificationRow: 'Verified Space',
-  verificationRowOff: 'Verify your Space',
-  verificationHint: 'Verification keeps your details private. Only the badge is shown.',
-  whisperWho: 'Who can Whisper you',
-  whisperEveryone: 'Everyone',
-  whisperClicksOnly: 'Clicks only',
-  whisperHint: 'Clicks only keeps Whispers inside a Click. Everyone lets a Whisper land as a request.',
-  ageRangeLabel: 'Age range',
-  distanceLabel: 'Max distance',
-  resetDemo: 'Reset this preview',
-  signOut: 'Sign Out',
-  deleteAccountBody: 'Permanently removes your Space, Moments, Vibes and Whispers.',
-  verifiedOn: 'Your Space is verified',
-
-  // §17 — a reply indicator, in Crushly's words.
-  whisperReplies: [
-    'Okay, that made me smile.',
-    'Tell me more.',
-    'Same. When are you free?',
-    'Good answer. Very good answer.',
-    'We should continue this over coffee.',
-  ],
-
-  // Onboarding. §4, §5 — a Space is created, not "registered".
-  obTitle: 'Create your Space',
-  obStep: (n: number, total: number) => `Step ${n} of ${total}`,
-  obWho: 'First, who are you?',
-  obWhoHint: 'This is what other men see on your Space.',
+  // ── onboarding steps (§5, §13) ──
+  obLooking: 'What are you looking for?',
+  obLookingHint: 'Choose as many as feel true. You can change this anytime.',
+  obNeedIntent: 'Pick at least one',
+  obWho: 'Who are you?',
+  obWhoHint: 'The basics — nothing is public until you finish.',
   obName: 'Name',
-  obNamePlaceholder: 'The name you go by',
+  obNamePlaceholder: 'Your first name',
   obUsername: 'Username',
-  obUsernameHint: '3 characters or more. Your Space link uses it.',
-  obAgePronouns: 'How old are you, and how do you read?',
+  obUsernameHint: 'Letters, numbers and underscores.',
+  obUsernameShort: 'Username needs at least 3 characters',
+  obUsernameTaken: 'That username is taken',
+  obRequired: 'This one is needed',
+  obAgePronouns: 'A little about you',
   obAge: 'Age',
   obPronouns: 'Pronouns',
+  obTooYoung: 'You need to be 18 or older',
   obArea: 'Where are you?',
-  obAreaHint: 'Crushly only ever shows your approximate area, never a precise location.',
   obAreaSelect: 'Pick your area',
-  obPhoto: 'Give your Space a face',
-  obPhotoHint: 'Choose a starting tile. You can swap real photos any time from Edit Space.',
-  obPhotoChoose: 'Choose a tile',
-  obPhotoUpload: 'Use my own image',
-  obPhotoUploaded: 'Using your image',
-  obAbout: `Tell them a little`,
-  obAboutHint: 'A line or two. What fills your week?',
-  obAboutPlaceholder: 'A line or two is plenty.',
+  obAreaHint: 'We only ever show your area — never an exact spot.',
+  obPhoto: 'Show your world.',
+  obPhotoCount: 'Add at least 4 photos.',
+  obPhotoHint: 'Choose a style for your profile now — add photos whenever you are ready.',
+  obPhotoChoose: 'Style',
+  obPhotoUpload: 'Upload a photo',
+  obPhotoUploaded: 'Photo added',
+  obAbout: 'About you',
+  obAboutPlaceholder: 'What should someone know before they say hello?',
+  obAboutHint: 'A few honest lines work better than a paragraph.',
   obInterests: 'What are you into?',
-  obInterestsHint: 'Pick at least three. These drive who you are shown.',
-  obLooking: 'What brings you here?',
-  obLookingHint: 'There is no wrong answer, and you can change it whenever it shifts.',
-  obNext: 'Next',
+  obInterestsHint: 'Pick up to eight — shared interests surface you in Discover.',
+  obNeedInterests: 'Pick at least three',
+  obPrefs: 'A few preferences',
+  obPrefsHint: 'You can fine-tune all of this later in Settings.',
+  obAgeRange: 'Age range',
+  obDistance: 'Distance',
+  obOnlineVisible: 'Show my online status',
+  obStep: (n: number, l: number) => `Step ${n} of ${l}`,
   obBack: 'Back',
-  obFinish: 'Enter my Flow',
-  obSkip: 'Skip for now',
+  obNext: 'Continue',
+  obSkip: 'Skip',
+  obFinish: 'Enter Crushly',
+  obDone: (name: string) => `You are in, ${name}. Welcome.`,
   obRestart: 'Review onboarding',
-  obRestartHint: 'Step back through the seven questions that set up your Space.',
-  obRequired: 'Add this to continue.',
-  obUsernameShort: 'Use 3 characters or more.',
-  obUsernameTaken: 'That username is taken.',
-  obTooYoung: 'Crushly is only for people 18 and older.',
-  obNeedInterests: 'Pick at least three interests.',
-  obNeedIntent: 'Pick at least one.',
-  obDone: (n: string) => `Your Space is set, ${n}.`,
-  welcomeAlert: (name: string) => `Welcome to Crushly, ${name}. Your Space is live.`,
+  obRestartHint: 'Walk through setup again — your profile keeps what you wrote.',
 
-  // Settings. §29
-  spaceSettings: 'Space Settings',
-  crushPreferences: 'Crush Preferences',
-  whisperSettings: 'Whisper Settings',
-  crushAlertSettings: 'Crush Alert Settings',
-  privacy: 'Privacy',
+  /** §5 — intentions are multi-select; never force one category. */
+  lookingOptions: ['Dating', 'Relationship', 'Friends', 'Something casual', 'New connections', 'Not sure yet'],
+
+  // ── discover (§6) ──
+  discoverTitle: 'Discover',
+  discoverSub: 'Find someone worth knowing.',
+  nearYou: 'Near you',
+  filters: 'Filters',
+  filterTitle: 'Discover preferences',
+  filterAge: 'Age',
+  filterDistance: 'Distance',
+  filterWithin: (km: number) => `Within ${km} km`,
+  filterLooking: 'Looking for',
+  filterInterests: 'Interests',
+  applyFilters: 'Apply filters',
+  resetFilters: 'Reset',
+  findPlaceholder: 'Find someone…',
+  searchMessages: 'Search conversations...',
+  clearFind: 'Clear',
+  verifiedSpaces: 'Verified profiles only',
+  discoveries: 'Discoveries',
+  emptyFind: 'No one fits those filters',
+  findHint: 'Try widening your distance or interests.',
+  activeNow: 'Active now',
+  lastActive: 'Active {n} ago',
+  aroundNow: 'Around now',
+  distanceHidden: 'Distance hidden',
+  aroundYourArea: 'Around your area',
+  menLabel: 'men',
+  viewSpace: 'View profile',
+  moreActions: 'More',
+  profileOptions: 'Profile options',
+  shareProfile: 'Share profile',
+  shareCopied: 'Profile link copied.',
+  pass: 'Pass',
+  aroundHint: 'Distance is approximate. Your exact location is never shown.',
+  consentHint: 'Crushly only ever shows an approximate distance.',
+
+  // ── actions (§6, §7) ──
+  sendCrush: 'Crush',
+  sendDeepCrush: 'Deep Crush',
+  crushed: 'Crushed',
+  sent: 'Sent',
+  keepClose: 'Keep Close',
+  letGo: 'Let Go',
+  sendWhisper: 'Send',
+  startWhisper: 'Say hello',
+
+  // ── crushes screen (§10) ──
+  crushesTitle: 'Your Crushes',
+  crushingOnYou: 'Crushing on you',
+  yourCrushes: 'Your crushes',
+  mutualCrushes: 'Mutual Crushes',
+  connections: 'Connections',
+  crushBack: 'Crush back',
+  crushedBack: 'Crushed back',
+  takeBackCrush: 'Take back',
+  awaitingReply: 'Waiting for a reply',
+  closeOnes: 'Close Ones',
+  yourCircle: 'Your Circle',
+  keepingClose: 'Keeping Close',
+  emptyCrushes: 'No crushes yet.',
+  emptyCrushesHint: 'Your next Crush could be around the corner.',
+  emptyMutual: 'No Mutual Crushes yet.',
+  emptyMutualHint: 'When the feeling is mutual, you will both know.',
+  emptyCloseOnes: 'No Close Ones yet.',
+  emptyCircle: 'Your Circle is quiet.',
+  closeOneSince: 'A Close One',
+  circleSince: 'In your Circle',
+  noActivity: 'This is where it will show up.',
+  circleHint: 'Your Circle is your people — the ones you actually know.',
+  crushHistory: 'Sent, no reply yet',
+
+  // ── messages (§11) ──
+  messagesTitle: 'Messages',
+  threadsSingular: 'conversation',
+  threadsPlural: 'conversations',
+  noConversations: 'No conversations yet.',
+  noConversationsHint: 'Someone interesting is waiting to hear from you.',
+  startDiscovering: 'Start discovering',
+  saySomething: 'Say something worth replying to...',
+  typing: 'typing…',
+  back: 'Back',
+  online: 'Online',
+  attachmentsSoon: 'Photos and voice messages are coming soon.',
+  messageHint: 'Only people you have a Mutual Crush with can message you.',
+  startTheWhisper: 'Say hello — the conversation starts here.',
+  emptyWhispers: 'Nothing here yet.',
+  emptyWhispersHint: 'A Mutual Crush opens the conversation.',
+
+  // ── moments (§12) ──
+  momentsTitle: 'Moments',
+  yourMoment: 'Your Moment',
+  addMoment: 'Add',
+  momentLabelPlaceholder: 'Title this Moment',
+  momentPlaceholder: 'What is happening?',
+  shareMoment: 'Share Moment',
+  reply: 'Reply',
+  replyNeedsMutual: 'You can reply once you have a Mutual Crush.',
+  saveMoment: 'Save',
+  unsaveMoment: 'Saved',
+  savedMoments: 'Saved',
+  emptyMoments: 'No Moments yet.',
+  emptyMomentsHint: 'Share the first one — it disappears in 24 hours.',
+  momentHint: 'Say something — it lasts a day.',
+  sharePrompt: 'Share a Moment…',
+  vibePlaceholder: 'Title this Moment',
+  vibeRailLabel: 'Recent Moments',
+  momentReactions: 'Crushes',
+
+  // ── profile (§8, §13) ──
+  profileTitle: 'Profile',
+  editSpace: 'Edit profile',
+  settingsTitle: 'Settings',
+  safetyTitle: 'Safety',
   safety: 'Safety',
-  account: 'Account',
-  security: 'Security',
-  deleteAccount: 'Delete Account',
-  communityGuidelines: 'Community Guidelines',
-
-  // Space detail labels. §7 — "Bio" is never shown, "About Me" always is.
-  momentsTab: 'Moments',
+  aboutMe: 'About me',
+  aboutName: (name: string) => `About ${name}`,
+  lookingFor: 'Looking for',
   interestsLabel: 'Interests',
   areaLabel: 'Area',
-  whispers: 'Whispers',
-  whisperPlaceholder: 'Say something worth a reply',
-  clickOpensWhispers: 'A Click opens Whispers. Send a Crush and wait to see if it comes back.',
-  consentHint: 'Being visible here is not an invitation. A Whisper needs a Click.',
-  blockedNote: 'You have cut this person off.',
+  sharedInterests: 'Shared interests',
+  profileComplete: (n: number) => `Profile ${n}% complete`,
+  completeHint: 'A fuller profile is shown more in Discover.',
+  verifyTitle: 'Make your profile more trustworthy',
+  verifyBody: 'Verification confirms you are a real person. It is free, private, and never shown as anything more than a small check.',
+  verifiedSpace: 'Verified profile',
+  verifyYourSpace: 'Get verified',
+  verificationRow: 'Verified',
+  verificationRowOff: 'Get verified',
+  verificationHint: 'Free, private, and always optional.',
+  yourMoments: 'Your Moments',
+  peopleKeepingClose: 'Keeping Close',
+  emptyCloseOnesHint: 'People you Keep Close appear here.',
+  emptyVibes: 'No Moments from you yet.',
+  spaceSettings: 'Settings',
+  cutOff: 'Block',
+  flagSpace: 'Report',
+  blockedNote: 'You have blocked this person. They cannot see you or reach you.',
+  letBackIn: 'Unblock',
+  cutOffThisPerson: 'Block',
+  removeConnection: 'Remove connection',
+  clickedWith: 'Mutual Crush',
+  emptyClicks: 'No Mutual Crushes yet.',
 
-  // Flow / composer
-  yourFlow: 'Your Flow',
-  sharePrompt: 'Share something with your Circles',
+  // ── confirmations (safety stays plain-spoken) ──
+  blockConfirmTitle: (name: string) => `Block ${name}?`,
+  blockConfirmBody: 'Blocking prevents them from seeing you or interacting with you anywhere on Crushly.',
+  flagConfirmTitle: 'Report this profile',
+  flagConfirmBody: 'Every report is reviewed. The person is never told who reported them.',
+  flagForReview: 'Report',
+  unclickConfirmTitle: (name: string) => `Remove your connection with ${name}?`,
+  unclickConfirmBody: 'This removes your Mutual Crush and deletes your conversation.',
+  unclickConfirmAction: 'Remove',
 
-  // Intent options. §5, §22
-  whatBringYou: 'What brings you here?',
-  lookingOptions: [
-    'Dating',
-    'Something Serious',
-    'Something Casual',
-    'Relationship',
-    'Friendship',
-    'New People',
-    'Chat',
-    'Not Sure Yet',
+  // ── mutual crush celebration (§9) ──
+  itsACrush: 'It’s a Crush.',
+  bothFelt: 'You both felt something.',
+  sayHelloCta: 'Say hello',
+  keepDiscovering: 'Keep discovering',
+
+  // ── notifications (§21) ──
+  alertsTitle: 'Notifications',
+  markAllRead: 'Mark all as read',
+  alertsUnread: (n: number) => `${n} unread`,
+  alertsCaughtUp: 'You are all caught up',
+  alertsEmpty: 'Nothing yet.',
+  alertTime: (m: number) => (m < 1 ? 'now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} hr ago` : `${Math.round(m / 1440)} d ago`),
+  unreadLabel: 'Unread',
+
+  // ── settings (§22) ──
+  account: 'Account',
+  phoneEmail: 'Phone / email',
+  password: 'Password',
+  accountStatus: 'Account status',
+  activeStatus: 'Active on this device',
+  discoverySection: 'Discovery',
+  privacySection: 'Privacy',
+  whoCanMessage: 'Who can message me',
+  messageEveryone: 'Everyone',
+  messageMutualOnly: 'Mutual Crushes only',
+  notificationsSection: 'Notifications',
+  notifyMessages: 'Messages',
+  notifyCrushes: 'Crushes',
+  notifyMoments: 'Moments',
+  recommendations: 'Recommendations',
+  appearance: 'Appearance',
+  darkMode: 'Dark',
+  lightMode: 'Light',
+  systemMode: 'System',
+  support: 'Support',
+  helpCenter: 'Help center',
+  contactSupport: 'Contact support',
+  guidelines: 'Community guidelines',
+  privacyPolicy: 'Privacy policy',
+  terms: 'Terms',
+  notInBuild: 'Not in this build',
+  save: 'Save',
+  crushPreferences: 'Crush preferences',
+  ageRangeLabel: 'Age range',
+  distanceLabel: 'Distance',
+  whisperHint: 'You can tighten this to Mutual Crushes only.',
+  whisperSettings: 'Messages',
+  whisperEveryone: 'Everyone',
+  whisperClicksOnly: 'Mutual Crushes only',
+
+  // ── safety center (§15, §16) ──
+  safetyIntro: 'Easy to reach, on purpose.',
+  visibleInDiscover: 'Visible in Discover',
+  visibleHint: 'Turn off and you stop appearing in Discover.',
+  incognito: 'Incognito mode',
+  incognitoHint: 'Pause discovery without losing anything.',
+  locationPrivacy: 'Show my distance',
+  locationHint: 'Others only ever see an approximate distance.',
+  onlineToggle: 'Online status',
+  readReceipts: 'Read receipts',
+  readReceiptsHint: 'When off, you will not send them either.',
+  blockedUsers: 'Blocked users',
+  noneBlocked: 'No one is blocked.',
+  reportsFiled: 'Reports filed',
+  noneReported: 'No reports filed.',
+  removeConnections: 'Remove a connection',
+  noneToRemove: 'No Mutual Crushes to remove.',
+  security: 'Account security',
+  securityHint: 'Your session lives on this device only.',
+  guidelinesBody: 'Be real. Be kind. No harassment, no impersonation, no nudity without consent. Every report is reviewed by a human.',
+  discoverMeToggle: 'Visible in Discover',
+  distanceToggle: 'Show my distance',
+  hideDistance: 'Hide distance',
+
+  // ── crushly plus (§18) ──
+  plusTitle: 'Crushly Plus',
+  plusSub: 'More ways to connect.',
+  plusFeatures: [
+    'Advanced discovery', 'Incognito mode', 'Unlimited Deep Crushes', 'Advanced filters',
+    'Profile boosts', 'Read receipts', 'Travel mode', 'Profile visibility controls',
+  ],
+  goPremium: 'Go Premium',
+  plusSoon: 'Crushly Plus is not in this build yet. Nothing is charged, nothing changes.',
+
+  // ── toasts ──
+  crushSent: (name: string) => `Crush sent to ${name}.`,
+  deepCrushSent: (name: string) => `Deep Crush sent to ${name}.`,
+  mutualCrushAlert: (name: string) => `You and ${name} have a Mutual Crush.`,
+  keepCloseAlert: (name: string) => `${name} is now a Close One.`,
+  welcomeAlert: (name: string) => `Welcome to Crushly, ${name}.`,
+  crushTakenBack: (name: string) => `You took back your Crush on ${name}.`,
+
+  /** Auto-replies stage the other person's side of a conversation. */
+  autoReplies: [
+    'Only if you pick the place.',
+    'You first.',
+    'That was faster than expected. Yes.',
+    'Careful — I take that as a plan.',
+    'Say more.',
   ],
 } as const
 
-/** §21 — every stored alert renders from its kind, so no alert copy lives in a
- * component. `at` is a timestamp; the label is relative. */
-export function crushAlertText(
-  kind: 'crush' | 'bigCrush' | 'click' | 'keepClose' | 'whisper' | 'vibe' | 'moment',
-  name: string,
-): string {
+/** §21 — notification center lines, one per internal kind. */
+export function crushAlertText(kind: 'crush' | 'bigCrush' | 'click' | 'keepClose' | 'whisper' | 'vibe' | 'moment', name: string): string {
   switch (kind) {
-    case 'crush': return copy.crushAlert(name)
-    case 'bigCrush': return copy.bigCrushAlert(name)
-    case 'click': return copy.clickAlert(name)
-    case 'keepClose': return copy.keepCloseAlert(name)
-    case 'whisper': return copy.newWhisperAlert
-    case 'vibe': return copy.vibeAlert(name)
-    default: return copy.momentAlert(name)
+    case 'crush': return `${name} crushed on you.`
+    case 'bigCrush': return `${name} sent you a Deep Crush.`
+    case 'click': return copy.mutualCrushAlert(name)
+    case 'whisper': return `New message from ${name}.`
+    case 'keepClose': return `${name} added you to their Close Ones.`
+    case 'vibe': return `${name} shared a Moment.`
+    case 'moment': return `${name} replied to your Moment.`
   }
 }
 
-/** §11 — coarse buckets only. Exact distance and GPS are never exposed. */
+/**
+ * §16 — distance is bucketed. There is no code path that renders a raw
+ * coordinate or an exact figure.
+ */
 export function describeDistance(km: number): string {
-  if (km < 1) return copy.lessThanKm
-  if (km < 5) return `${Math.round(km)} km away`
-  if (km < 25) return `${Math.round(km / 5) * 5} km away`
-  return copy.aroundYourArea
+  if (km < 1) return 'Less than 1 km away'
+  if (km < 10) return `${Math.round(km)} km away`
+  return 'Around your area'
 }

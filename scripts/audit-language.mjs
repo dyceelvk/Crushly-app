@@ -80,6 +80,7 @@ function userFacingChunks(source) {
     .replace(/\/\*[\s\S]*?\*\//g, (m) => ' '.repeat(m.length))
     .replace(/^\s*\/\/.*$/gm, (m) => ' '.repeat(m.length))
     .replace(/className=(["'])[^"']*\1/g, 'className=STRIPPED')
+    .replace(/className=\{`[^`]*`\}/g, 'className=STRIPPED')
     .replace(/className=\{[^}]*\}/g, 'className=STRIPPED')
     .replace(/^\s*(import|export)[\s\S]*?from\s+['"][^'"]+['"];?$/gm, (m) => ' '.repeat(m.length))
 

@@ -1,33 +1,53 @@
-import { useEffect, useState } from 'react'
-import { Bell, Compass, Heart, Home, MapPin, MessageCircleHeart, User } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Aperture, Bell, Compass, Heart, MessageCircle, User } from 'lucide-react'
 import { useCrushly } from './state/useCrushly'
 import type { Overlay } from './state/types'
 import { NAV, copy } from './language/crushly'
-import { ConfirmSheet, Sheet } from './components/ui'
-import { SpaceSheet } from './components/SpaceSheet'
-import { ActivityPanel, AlertsPanel, EditSpacePanel, SettingsPanel } from './components/panels'
+import { ConfirmSheet, LogoMark, Sheet } from './components/ui'
+import { ProfileSheet } from './components/ProfileSheet'
+import { Conversation } from './components/Conversation'
+import { EditProfilePanel, NotificationsPanel, PremiumPanel, SafetyPanel, SettingsPanel } from './components/panels'
 import { OnboardingScreen } from './screens/Onboarding'
-import { FlowScreen } from './screens/Flow'
 import { DiscoverScreen } from './screens/Discover'
-import { AroundScreen } from './screens/Around'
-import { WhispersScreen } from './screens/Whispers'
-import { SpaceScreen } from './screens/Space'
+import { CrushesScreen } from './screens/Crushes'
+import { MessagesScreen } from './screens/Messages'
+import { MomentsScreen } from './screens/Moments'
+import { ProfileScreen } from './screens/Profile'
 
-/** §41 — the app is navigated as Flow / Discover / Around / Whispers / Space. */
-const TAB_KEY = ['flow', 'discover', 'around', 'whispers', 'space'] as const
+/** Brief §3 — Discover · Crushes · Messages · Moments · Profile. */
+const TAB_KEY = ['discover', 'crushes', 'messages', 'moments', 'profile'] as const
 type Tab = (typeof TAB_KEY)[number]
 
-const TAB_ICON = { flow: Home, discover: Compass, around: MapPin, whispers: MessageCircleHeart, space: User }
+const TAB_ICON = {
+  discover: Compass, crushes: Heart, messages: MessageCircle, moments: Aperture, profile: User,
+}
 
 export default function App() {
   const crushly = useCrushly()
   const { ui, dispatch } = crushly
   const s = ui.state
-  const [tab, setTab] = useState<Tab>('flow')
+  const [phase, setPhase] = useState<'splash' | 'gate' | 'app'>('splash')
+  const [tab, setTab] = useState<Tab>('discover')
   const [overlay, setOverlay] = useState<Overlay>('none')
-  // §36 — the prompt demanded an age floor but never named one; 18+ is the
-  // assumption this build makes, and it gates every adult surface.
-  const [adult, setAdult] = useState(false)
+  const [convId, setConvId] = useState<string | null>(null)
+  /** Brief §9 — the Mutual Crush celebration, shown when a match is created. */
+  const [celebrateId, setCelebrateId] = useState<string | null>(null)
+  const prevMatches = useRef(s.matches.length)
+
+  // §4 — cinematic splash: elegant and fast, then it gets out of the way.
+  useEffect(() => {
+    const t = window.setTimeout(() => setPhase((p) => (p === 'splash' ? 'gate' : p)), 2400)
+    return () => clearTimeout(t)
+  }, [])
+
+  // A new Mutual Crush triggers the celebration (never on first paint).
+  useEffect(() => {
+    if (s.matches.length > prevMatches.current) {
+      const newest = s.matches[s.matches.length - 1]
+      if (newest) setCelebrateId(newest.profileId)
+    }
+    prevMatches.current = s.matches.length
+  }, [s.matches])
 
   // Transient alerts auto-clear.
   useEffect(() => {
@@ -36,26 +56,37 @@ export default function App() {
     return () => timers.forEach(clearTimeout)
   }, [ui.alerts, dispatch])
 
-  // §17 — "Whispering…" then a reply. Timed here, not in the reducer.
+  // The other person's reply: "typing…" then an answer. Timed here, not in the reducer.
   useEffect(() => {
     const who = s.typingProfileId
     if (!who) return
     const t = window.setTimeout(() => {
-      const lines = copy.whisperReplies
+      const lines = copy.autoReplies
       dispatch({ type: 'whisperReply', profileId: who, body: lines[Math.floor(Math.random() * lines.length)] })
     }, 1600)
     return () => clearTimeout(t)
   }, [s.typingProfileId, dispatch])
 
-  if (!adult) {
+  if (phase === 'splash') {
+    return (
+      <div className="phone">
+        <button className="splash" onClick={() => setPhase('gate')} aria-label={copy.splashTagline}>
+          <span className="splash-logo"><LogoMark size={120} wordmark /></span>
+          <span className="splash-tag">{copy.splashTagline}</span>
+        </button>
+      </div>
+    )
+  }
+
+  if (phase === 'gate') {
     return (
       <div className="phone">
         <div className="gate">
-          <div className="gate-mark">C</div>
+          <div className="gate-mark"><LogoMark size={52} /></div>
           <h1>{copy.ageGateTitle}</h1>
           <p>{copy.ageGateBody}</p>
-          <button className="btn wide" onClick={() => setAdult(true)}>{copy.ageGateConfirm}</button>
-          <button className="btn ghost wide" onClick={() => setAdult(false)}>{copy.ageGateDecline}</button>
+          <button className="btn wide" onClick={() => setPhase('app')}>{copy.ageGateConfirm}</button>
+          <button className="btn ghost wide" onClick={() => setPhase('splash')}>{copy.ageGateDecline}</button>
           <p className="hint">{copy.ageGateNote}</p>
         </div>
       </div>
@@ -72,38 +103,32 @@ export default function App() {
 
   const openProfile = ui.openSpaceId ? s.profiles.find((p) => p.id === ui.openSpaceId) ?? null : null
   const confirmProfile = ui.confirm ? s.profiles.find((p) => p.id === ui.confirm!.profileId) : null
+  const convProfile = convId ? s.profiles.find((p) => p.id === convId) ?? null : null
+  const celebrateProfile = celebrateId ? s.profiles.find((p) => p.id === celebrateId) ?? null : null
 
   const screens: Record<Tab, React.ReactNode> = {
-    flow: <FlowScreen ui={ui} dispatch={dispatch} />,
     discover: <DiscoverScreen ui={ui} dispatch={dispatch} />,
-    around: <AroundScreen ui={ui} dispatch={dispatch} />,
-    whispers: <WhispersScreen ui={ui} dispatch={dispatch} />,
-    space: <SpaceScreen ui={ui} dispatch={dispatch} onOpen={(o) => setOverlay(o)} />,
+    crushes: <CrushesScreen ui={ui} dispatch={dispatch} onOpenConv={setConvId} />,
+    messages: <MessagesScreen ui={ui} dispatch={dispatch} onOpenConv={setConvId} />,
+    moments: <MomentsScreen ui={ui} dispatch={dispatch} onOpenConv={setConvId} />,
+    profile: <ProfileScreen ui={ui} dispatch={dispatch} onOpen={setOverlay} />,
   }
 
   const unread =
     ui.threads.reduce((n, t) => {
       const all = s.messages.filter((m) => m.matchId === t.match.id)
       return n + (all.length && !all[all.length - 1].fromMe ? 1 : 0)
-    }, 0) + ui.incoming.length
+    }, 0)
 
   return (
     <div className="phone">
       <header className="topbar">
-        <span className="brand" aria-hidden>C</span>
+        <LogoMark size={26} />
         <span className="brand-word">Crushly</span>
         <span className="grow" />
-        <button
-          className="topbtn"
-          onClick={() => setOverlay('activity')}
-          aria-label={`${copy.crushesTab} & ${copy.clicksLabel}`}
-        >
-          <Heart size={18} />
-          {ui.incoming.length ? <span className="topbadge">{ui.incoming.length}</span> : null}
-        </button>
-        <button className="topbtn" onClick={() => setOverlay('alerts')} aria-label={copy.alertsTitle}>
+        <button className="topbtn" onClick={() => setOverlay('notifications')} aria-label={copy.alertsTitle}>
           <Bell size={18} />
-          {ui.unreadAlerts ? <span className="topbadge violet">{ui.unreadAlerts}</span> : null}
+          {ui.unreadAlerts ? <span className="topbadge">{ui.unreadAlerts}</span> : null}
         </button>
       </header>
 
@@ -116,6 +141,10 @@ export default function App() {
           const key = TAB_KEY[i]
           const on = key === tab
           const Icon = TAB_ICON[key]
+          const badge =
+            key === 'messages' ? unread
+            : key === 'crushes' ? ui.incoming.length
+            : 0
           return (
             <button
               key={key}
@@ -126,7 +155,7 @@ export default function App() {
             >
               <Icon size={19} className="tab-glyph" aria-hidden />
               <span className="tab-label">{label}</span>
-              {key === 'whispers' && unread ? <span className="tab-badge" aria-label={`${unread} new`}>{unread}</span> : null}
+              {badge ? <span className="tab-badge" aria-label={`${badge} new`}>{badge}</span> : null}
             </button>
           )
         })}
@@ -146,27 +175,83 @@ export default function App() {
       {overlay !== 'none' ? (
         <Sheet
           title={
-            overlay === 'alerts' ? copy.alertsTitle
-              : overlay === 'activity' ? copy.activityTitle
+            overlay === 'notifications' ? copy.alertsTitle
+              : overlay === 'settings' ? copy.settingsTitle
               : overlay === 'edit' ? copy.editSpace
-              : copy.settingsTitle
+              : overlay === 'premium' ? copy.plusTitle
+              : copy.safetyTitle
           }
           onClose={() => setOverlay('none')}
         >
-          {overlay === 'alerts' ? <AlertsPanel state={s} dispatch={dispatch} /> : null}
-          {overlay === 'activity' ? <ActivityPanel state={s} dispatch={dispatch} /> : null}
-          {overlay === 'settings' ? <SettingsPanel state={s} dispatch={dispatch} onEdit={() => setOverlay('edit')} /> : null}
-          {overlay === 'edit' ? <EditSpacePanel state={s} dispatch={dispatch} onDone={() => setOverlay('none')} /> : null}
+          {overlay === 'notifications' ? <NotificationsPanel state={s} dispatch={dispatch} /> : null}
+          {overlay === 'settings' ? (
+            <SettingsPanel state={s} dispatch={dispatch} onEdit={() => setOverlay('edit')} onSafety={() => setOverlay('safety')} />
+          ) : null}
+          {overlay === 'edit' ? <EditProfilePanel state={s} dispatch={dispatch} onDone={() => setOverlay('none')} /> : null}
+          {overlay === 'safety' ? <SafetyPanel state={s} dispatch={dispatch} /> : null}
+          {overlay === 'premium' ? <PremiumPanel dispatch={dispatch} /> : null}
         </Sheet>
       ) : null}
 
       {openProfile ? (
-        <SpaceSheet
+        <ProfileSheet
           profile={openProfile}
           state={s}
           dispatch={dispatch}
           onClose={() => dispatch({ type: 'openSpace', profileId: null })}
+          onOpenConv={setConvId}
         />
+      ) : null}
+
+      {convProfile && s.matches.some((m) => m.profileId === convProfile.id) ? (
+        <Conversation
+          profile={convProfile}
+          state={s}
+          dispatch={dispatch}
+          onBack={() => setConvId(null)}
+        />
+      ) : null}
+
+      {celebrateProfile ? (
+        <div className="celebrate" role="dialog" aria-modal="true" aria-label={copy.itsACrush}>
+          <button className="scrim" onClick={() => setCelebrateId(null)} aria-label="Close" />
+          <div className="celebrate-card">
+            <div className="celebrate-avatars" aria-hidden>
+              <span
+                className="celebrate-a me"
+                style={{
+                  backgroundImage: s.me.photoUrl
+                    ? `url(${s.me.photoUrl})`
+                    : `linear-gradient(150deg, hsl(${s.me.hue} 72% 58%), hsl(${(s.me.hue + 46) % 360} 68% 42%))`,
+                }}
+              >
+                {s.me.photoUrl ? '' : (s.me.name || 'You').slice(0, 1)}
+              </span>
+              <span className="celebrate-heart"><Heart size={24} fill="currentColor" /></span>
+              <span
+                className="celebrate-a them"
+                style={{
+                  backgroundImage: `linear-gradient(150deg, hsl(${celebrateProfile.hue} 72% 58%), hsl(${(celebrateProfile.hue + 46) % 360} 68% 42%))`,
+                }}
+              >
+                {celebrateProfile.name.slice(0, 1)}
+              </span>
+            </div>
+            <h1>{copy.itsACrush}</h1>
+            <p>{copy.bothFelt}</p>
+            <div className="celebrate-actions">
+              <button
+                className="btn crush wide"
+                onClick={() => { setCelebrateId(null); setTab('messages'); setConvId(celebrateProfile.id) }}
+              >
+                {copy.sayHelloCta}
+              </button>
+              <button className="btn ghost wide" onClick={() => { setCelebrateId(null); setTab('discover') }}>
+                {copy.keepDiscovering}
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {ui.confirm && confirmProfile ? (
@@ -185,8 +270,8 @@ export default function App() {
 function confirmProps(kind: 'cutOff' | 'flag' | 'unclick', name: string, onConfirm: () => void, onCancel: () => void) {
   if (kind === 'cutOff') {
     return {
-      title: copy.cutOffConfirmTitle,
-      body: copy.cutOffConfirmBody,
+      title: copy.blockConfirmTitle(name),
+      body: copy.blockConfirmBody,
       confirmLabel: copy.cutOffThisPerson,
       onConfirm, onCancel, danger: true,
     }

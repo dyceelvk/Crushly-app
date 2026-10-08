@@ -1,6 +1,58 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { BadgeCheck, X } from 'lucide-react'
 import { copy } from '../language/crushly'
+
+/**
+ * The Crushly mark — ported from the uploaded prototype (CrushlyApp.zip):
+ * a gold "C" arc, a heart-flourish connection curve through its opening, and
+ * a faint outer glow ring. Gold gradient #F5D76E → #D4AF37 → #B8860B.
+ */
+export function LogoMark({ size = 30, wordmark = false }: { size?: number; wordmark?: boolean }) {
+  const id = useId()
+  const stroke = `url(#${id})`
+  return (
+    <span className={wordmark ? 'logo-mark logo-with-word' : 'logo-mark'} aria-hidden>
+      <svg viewBox="0 0 200 200" width={size} height={size}>
+        <defs>
+          <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#F5D76E" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#B8860B" />
+          </linearGradient>
+        </defs>
+        {/* outer glow circle */}
+        <circle cx="100" cy="100" r="90" fill="none" stroke={stroke} strokeWidth="2" opacity="0.3" />
+        {/* stylized C */}
+        <path
+          d="M140 55 C110 40, 60 45, 50 85 C40 125, 70 160, 110 160 C130 160, 145 150, 150 140"
+          fill="none"
+          stroke={stroke}
+          strokeWidth="14"
+          strokeLinecap="round"
+        />
+        {/* connection curve / heart flourish */}
+        <path
+          d="M55 110 Q80 95, 100 110 Q120 125, 145 110"
+          fill="none"
+          stroke={stroke}
+          strokeWidth="8"
+          strokeLinecap="round"
+          opacity="0.9"
+        />
+      </svg>
+      {wordmark ? <span className="logo-word">Crushly</span> : null}
+    </span>
+  )
+}
+
+export function Wordmark() {
+  return (
+    <span className="brand-word">
+      <LogoMark size={22} />
+      Crushly
+    </span>
+  )
+}
 
 export function Avatar({
   name, hue, size = 44, ring, src,
@@ -9,7 +61,7 @@ export function Avatar({
   hue: number
   size?: number
   ring?: 'none' | 'vibe' | 'verified'
-  /** Chosen in onboarding §4; gradient initials are the fallback. */
+  /** Chosen in onboarding; gradient initials are the fallback. */
   src?: string | null
 }) {
   const initials = name.slice(0, 1).toUpperCase()
@@ -40,11 +92,11 @@ export function Chip({ children, tone = 'quiet' }: { children: ReactNode; tone?:
   return <span className={`chip chip-${tone}`}>{children}</span>
 }
 
-/** §7 — "Bio" is never shown; the Space label is About Me. */
-export function AboutMe({ text, clamp }: { text: string; clamp?: boolean }) {
+/** §8 — the About section, labelled for whose profile it is. */
+export function AboutMe({ text, clamp, name }: { text: string; clamp?: boolean; name?: string }) {
   return (
     <p className={clamp ? 'about clamp' : 'about'}>
-      <span className="label">{copy.aboutMe}</span>
+      <span className="label">{name ? copy.aboutName(name) : copy.aboutMe}</span>
       {text}
     </p>
   )
@@ -58,7 +110,7 @@ export function VerifiedMark({ verified, name }: { verified: boolean; name: stri
 }
 
 /**
- * §11 — distance is bucketed. There is no code path in this component that
+ * §16 — distance is bucketed. There is no code path in this component that
  * renders a raw coordinate or an exact figure.
  */
 export function DistanceTag({ text }: { text: string }) {
@@ -74,14 +126,36 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
   )
 }
 
-export function EmptyState({ title, hint, cta }: { title: string; hint?: string; cta?: ReactNode }) {
+/** §20 — empty states are never boring: art, a line, and a way out. */
+export function EmptyState({ title, hint, cta, art }: { title: string; hint?: string; cta?: ReactNode; art?: ReactNode }) {
   return (
     <div className="empty">
+      {art ? <span className="empty-art" aria-hidden>{art}</span> : null}
       <p className="empty-title">{title}</p>
       {hint ? <p className="empty-hint">{hint}</p> : null}
       {cta}
     </div>
   )
+}
+
+/** §13 — profile completion is honest: it counts what is actually filled. */
+export function ProfileCompletion({ percent }: { percent: number }) {
+  return (
+    <div className="progress">
+      <div className="progress-row">
+        <span className="progress-label">{copy.profileComplete(percent)}</span>
+        <span className="progress-pct">{percent}%</span>
+      </div>
+      <div className="progress-bar" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
+        <span style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  )
+}
+
+/** Brief §31 — unfinished backend-dependent rows are isolated, never faked. */
+export function SoonChip() {
+  return <span className="soon">{copy.notInBuild}</span>
 }
 
 export function Sheet({
@@ -102,7 +176,7 @@ export function Sheet({
   )
 }
 
-/** §26 — safety confirmations stay explicit; branding never softens them. */
+/** Safety confirmations stay explicit; branding never softens them. */
 export function ConfirmSheet({
   title, body, confirmLabel, onConfirm, onCancel, danger,
 }: {
