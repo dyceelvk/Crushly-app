@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react'
 // every host must be accepted and the server must bind outside loopback.
 export default defineConfig({
   plugins: [react()],
+  // Relative asset URLs: the same `dist/` then serves correctly from a Netlify
+  // root and from a GitHub Pages project sub-path (/Crushly-app/).
+  base: './',
   server: {
     host: '0.0.0.0',
     port: 5173,
