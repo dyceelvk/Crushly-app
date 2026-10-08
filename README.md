@@ -139,7 +139,7 @@ unspecified and are decisions this build made. Each needs a yes/no from you:
 5. **Onboarding.** §4 collects a `Bio` while §7 mandates `Bio → About Me`. The
    built flow labels the step About Me and stores it in `about`.
 
-`npm run smoke` covers 48 runtime assertions: the §33 flow (one-way Crush must
+`npm run smoke` covers 49 runtime assertions: the §33 flow (one-way Crush must
 not create a Click, a mutual one must), §35 cut-off withdrawal, Unclick,
 re-show suppression, distance bucketing, and a render pass over every screen.
 
