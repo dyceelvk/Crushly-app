@@ -39,6 +39,8 @@ export interface Post {
   likes: number
   comments: number
   saved: boolean
+  /** True once the user has Crush-reacted to this Moment. */
+  reacted: boolean
 }
 
 export interface Story {
@@ -92,8 +94,12 @@ export interface State {
     showOnlineStatus: boolean
     /** §30 — authentication terms stay standard. */
     ageVerified: boolean
-    /** §27 — who can start a Whisper with me. */
+    /** Who can start a conversation with me. */
     whisperPermission: 'Everyone' | 'Clicks only'
+    /** Brief §16 — read receipts are opt-out. */
+    readReceipts: boolean
+    /** Brief §22 — notification preferences. */
+    notify: { messages: boolean; crushes: boolean; moments: boolean }
     /** §6 — discovery preferences. */
     ageRange: [number, number]
     maxDistanceKm: number
@@ -130,7 +136,7 @@ const profiles: Profile[] = [
     area: 'Brawley', distanceKm: 0.8,
     about: 'Architect, terrible cook, very good listener. Long walks then coffee.',
     interests: ['Ramen', 'Running', 'Film photography', 'Jazz'],
-    lookingFor: ['Something Serious', 'Dating'], verified: true, onlineNow: true,
+    lookingFor: ['Relationship', 'Dating'], verified: true, onlineNow: true,
     lastActiveMinutesAgo: 2, photos: 5, sharedInterests: ['Running', 'Ramen'],
     mutualFriends: 3, hue: 18,
   },
@@ -139,7 +145,7 @@ const profiles: Profile[] = [
     area: 'Oyigbo Rd', distanceKm: 2.4,
     about: 'Product designer. I collect vinyl and lose at board games.',
     interests: ['Vinyl', 'Board games', 'Cooking', 'Cycling'],
-    lookingFor: ['Something Casual', 'New People', 'Chat'], verified: true, onlineNow: false,
+    lookingFor: ['Something casual', 'New connections'], verified: true, onlineNow: false,
     lastActiveMinutesAgo: 46, photos: 4, sharedInterests: ['Vinyl', 'Cycling'],
     mutualFriends: 1, hue: 268,
   },
@@ -148,7 +154,7 @@ const profiles: Profile[] = [
     area: 'GRA Phase 2', distanceKm: 6.1,
     about: 'Lawyer by day, weekend hiker. Looking for a Circle before anything else.',
     interests: ['Hiking', 'Wine', 'Theatre', 'Dogs'],
-    lookingFor: ['Friendship', 'Not Sure Yet'], verified: false, onlineNow: true,
+    lookingFor: ['Friends', 'Not sure yet'], verified: false, onlineNow: true,
     lastActiveMinutesAgo: 8, photos: 6, sharedInterests: ['Theatre'],
     mutualFriends: 5, hue: 152,
   },
@@ -157,7 +163,7 @@ const profiles: Profile[] = [
     area: 'Peter Odili Rd', distanceKm: 11.7,
     about: 'Final year med student. I will talk about football.',
     interests: ['Football', 'Gym', 'Afrobeats'],
-    lookingFor: ['Dating', 'Something Casual'], verified: false, onlineNow: false,
+    lookingFor: ['Dating', 'Something casual'], verified: false, onlineNow: false,
     lastActiveMinutesAgo: 190, photos: 3, sharedInterests: ['Gym'],
     mutualFriends: 0, hue: 42,
   },
@@ -166,7 +172,7 @@ const profiles: Profile[] = [
     area: 'Rumuokoro', distanceKm: 32.4,
     about: 'Sound engineer. Quiet in person, loud on the dancefloor.',
     interests: ['Music', 'Production', 'Anime', 'Ramen'],
-    lookingFor: ['Relationship', 'Social connections'], verified: true, onlineNow: true,
+    lookingFor: ['Relationship', 'New connections'], verified: true, onlineNow: true,
     lastActiveMinutesAgo: 1, photos: 7, sharedInterests: ['Ramen', 'Music'],
     mutualFriends: 2, hue: 320,
   },
@@ -175,7 +181,7 @@ const profiles: Profile[] = [
     area: 'Trans Amadi', distanceKm: 4.3,
     about: 'Builds things. Reads too much. Will send you book recommendations.',
     interests: ['Books', 'Coding', 'Coffee', 'Film photography'],
-    lookingFor: ['Something Serious', 'Chat'], verified: true, onlineNow: false,
+    lookingFor: ['New connections', 'Dating'], verified: true, onlineNow: false,
     lastActiveMinutesAgo: 22, photos: 4, sharedInterests: ['Film photography', 'Coffee'],
     mutualFriends: 4, hue: 205,
   },
@@ -203,10 +209,12 @@ export const initialState: State = {
     id: 'me', name: 'Obi', username: 'obioke', age: 30, pronouns: 'he/him',
     area: 'Port Harcourt', about: 'Engineer, part-time chef, Sunday-market regular.',
     interests: ['Running', 'Ramen', 'Coffee', 'Film photography'],
-    lookingFor: ['Dating', 'Something Serious'],
+    lookingFor: ['Dating', 'Relationship'],
     verified: true, discoverable: true, showDistance: true, showOnlineStatus: true,
     ageVerified: true, hue: 12, onboarded: true, photoUrl: null,
-    whisperPermission: 'Clicks only', ageRange: [22, 38], maxDistanceKm: 35,
+    whisperPermission: 'Clicks only', readReceipts: true,
+    notify: { messages: true, crushes: true, moments: true },
+    ageRange: [22, 38], maxDistanceKm: 35,
   },
   profiles,
   likes: {},
@@ -225,9 +233,9 @@ export const initialState: State = {
     { id: 'ms3', matchId: 'm1', fromMe: false, body: 'Saturday, if you want company.', at: '09:14' },
   ],
   posts: [
-    { id: 'po1', authorId: 'p6', body: 'Shipped the thing I have been ignoring for six weeks. Small win, counted.', secondsSinceShare: 5400, likes: 41, comments: 6, saved: false },
-    { id: 'po2', authorId: 'p1', body: 'Ramen night. Broth started at 6am, worth it.', secondsSinceShare: 12600, likes: 88, comments: 14, saved: true },
-    { id: 'po3', authorId: 'p3', body: 'Circle dinner #4. Five people, zero phones out. Rare.', secondsSinceShare: 41000, likes: 122, comments: 21, saved: false },
+    { id: 'po1', authorId: 'p6', body: 'Shipped the thing I have been ignoring for six weeks. Small win, counted.', secondsSinceShare: 5400, likes: 41, comments: 6, saved: false, reacted: false },
+    { id: 'po2', authorId: 'p1', body: 'Ramen night. Broth started at 6am, worth it.', secondsSinceShare: 12600, likes: 88, comments: 14, saved: true, reacted: false },
+    { id: 'po3', authorId: 'p3', body: 'Circle dinner #4. Five people, zero phones out. Rare.', secondsSinceShare: 41000, likes: 122, comments: 21, saved: false, reacted: false },
   ],
   stories: [
     { id: 'st1', authorId: 'p5', label: 'Studio session', hoursLeft: 5, seen: false, hue: 320 },

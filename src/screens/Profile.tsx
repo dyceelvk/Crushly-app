@@ -1,15 +1,17 @@
 import { useState } from 'react'
-import { BadgeCheck, Bookmark, Users } from 'lucide-react'
-import { AboutMe, Avatar, Chip, EmptyState, SectionTitle, TimeAgo, VerifiedMark } from '../components/ui'
+import { BadgeCheck, Bookmark, Camera, ChevronRight, Pencil, Settings, Shield, Sparkles, Users, Zap } from 'lucide-react'
+import {
+  AboutMe, Avatar, Chip, EmptyState, ProfileCompletion, SectionTitle, TimeAgo, VerifiedMark,
+} from '../components/ui'
 import { copy } from '../language/crushly'
-import type { Overlay } from '../state/types'
 import type { Props } from './types'
 
 /**
- * §7 — a Space, not a profile. §27 — privacy controls live in Settings, which
- * this screen opens rather than reimplementing.
+ * Brief §8/§13 — your identity: hero, honest completion, stats, the profile
+ * sections, your Moments, your connections, and the management entries
+ * (edit, settings, verification, safety).
  */
-export function SpaceScreen({ ui, dispatch, onOpen }: Props & { onOpen: (o: Overlay) => void }) {
+export function ProfileScreen({ ui, dispatch, onOpen }: Props) {
   const s = ui.state
   const [showCircle, setShowCircle] = useState(false)
 
@@ -20,15 +22,23 @@ export function SpaceScreen({ ui, dispatch, onOpen }: Props & { onOpen: (o: Over
   const myMoments = s.posts.filter((p) => p.authorId === 'me')
   const myVibes = s.stories.filter((x) => x.authorId === 'me')
 
+  // §13 — completion counts what is actually filled, nothing more.
+  const filled = [
+    Boolean(s.me.name), Boolean(s.me.username), s.me.age >= 18, Boolean(s.me.area),
+    s.me.about.length >= 20, Boolean(s.me.photoUrl), s.me.interests.length >= 3,
+    s.me.lookingFor.length >= 1, s.me.verified,
+  ]
+  const percent = Math.round((filled.filter(Boolean).length / filled.length) * 100)
+
   return (
     <div className="screen">
       <header className="head">
         <div>
-          <h1>{copy.mySpace}</h1>
+          <h1>{s.me.name || copy.profileTitle}</h1>
           <p className="muted">@{s.me.username} · {s.me.pronouns}</p>
         </div>
-        <button className="btn quiet tiny" onClick={() => onOpen('settings')} aria-label={copy.spaceSettings}>
-          {copy.spaceSettings}
+        <button className="btn quiet tiny" onClick={() => onOpen?.('settings')} aria-label={copy.settingsTitle}>
+          <Settings size={14} aria-hidden /> {copy.settingsTitle}
         </button>
       </header>
 
@@ -44,20 +54,23 @@ export function SpaceScreen({ ui, dispatch, onOpen }: Props & { onOpen: (o: Over
           <p className="space-sub">{s.me.area}</p>
         </div>
 
+        <ProfileCompletion percent={percent} />
+        {percent < 100 ? <p className="hint progress-hint">{copy.completeHint}</p> : null}
+
         <div className="me-stats">
-          <button onClick={() => onOpen('activity')}>
+          <button onClick={() => onOpen?.('notifications')}>
             <strong>{ui.incoming.length}</strong>
-            {copy.crushesTab}
+            {copy.crushingOnYou}
           </button>
-          <button onClick={() => onOpen('activity')}>
+          <button onClick={() => dispatch({ type: 'toast', text: copy.noActivity })}>
             <strong>{s.matches.length}</strong>
-            {copy.clicksLabel}
+            {copy.mutualCrushes}
           </button>
-          <button onClick={() => onOpen('activity')}>
+          <button onClick={() => dispatch({ type: 'toast', text: copy.noActivity })}>
             <strong>{closeOnes.length}</strong>
-            {copy.yourCloseOnes}
+            {copy.closeOnes}
           </button>
-          <button onClick={() => onOpen('alerts')}>
+          <button onClick={() => onOpen?.('notifications')}>
             <strong>{s.notifications.filter((n) => !n.read).length}</strong>
             {copy.alertsTitle}
           </button>
@@ -70,12 +83,30 @@ export function SpaceScreen({ ui, dispatch, onOpen }: Props & { onOpen: (o: Over
         </div>
 
         <div className="me-actions">
-          <button className="btn" onClick={() => onOpen('edit')}>{copy.editSpace}</button>
-          <button className="btn quiet">
-            {s.me.verified ? <><BadgeCheck size={15} aria-hidden /> {copy.verifiedSpace}</> : copy.verifyYourSpace}
+          <button className="btn ghost" onClick={() => onOpen?.('edit')}><Pencil size={14} aria-hidden /> {copy.editSpace}</button>
+          <button className="btn primary" onClick={() => onOpen?.('premium')}>
+            <Sparkles size={15} aria-hidden /> {copy.plusTitle}
           </button>
         </div>
+        <div className="me-actions">
+          <button
+            className="btn quiet"
+            onClick={() => dispatch({ type: 'toggleVerified' })}
+            aria-pressed={s.me.verified}
+          >
+            <BadgeCheck size={15} aria-hidden /> {s.me.verified ? copy.verifiedSpace : copy.verifyYourSpace}
+          </button>
+        </div>
+        {!s.me.verified ? <p className="hint">{copy.verifyTitle} {copy.verificationHint}</p> : null}
       </div>
+
+      <button className="row setrow safety-row" onClick={() => onOpen?.('safety')}>
+        <span className="row-main">
+          <span className="row-name"><Shield size={15} aria-hidden /> {copy.safetyTitle}</span>
+          <span className="row-sub">{copy.safetyIntro}</span>
+        </span>
+        <ChevronRight size={16} aria-hidden />
+      </button>
 
       <SectionTitle
         action={
@@ -98,7 +129,7 @@ export function SpaceScreen({ ui, dispatch, onOpen }: Props & { onOpen: (o: Over
           ))}
         </div>
       ) : (
-        <EmptyState title={copy.emptyCloseOnes} hint={copy.emptyCircle} />
+        <EmptyState title={copy.emptyCloseOnes} hint={copy.emptyCloseOnesHint} />
       )}
 
       {showCircle ? (
@@ -125,6 +156,27 @@ export function SpaceScreen({ ui, dispatch, onOpen }: Props & { onOpen: (o: Over
         </div>
       ) : null}
 
+      <SectionTitle>{copy.yourMoments}</SectionTitle>
+      {myMoments.length ? (
+        <div className="moments">
+          {myMoments.map((p) => (
+            <article key={p.id} className="moment compact">
+              <TimeAgo seconds={p.secondsSinceShare} />
+              <p>{p.body}</p>
+              <p className="counts">{p.likes} {copy.momentReactions} · {p.comments} {copy.reply}</p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title={copy.emptyVibes} hint={copy.momentHint} art={<Camera size={22} aria-hidden />} />
+      )}
+
+      {myVibes.length ? (
+        <div className="chips">
+          {myVibes.map((v) => <Chip key={v.id} tone="shared"><Zap size={11} aria-hidden /> {v.label}</Chip>)}
+        </div>
+      ) : null}
+
       <SectionTitle>{copy.savedMoments}</SectionTitle>
       {saved.length ? (
         <div className="moments">
@@ -139,30 +191,6 @@ export function SpaceScreen({ ui, dispatch, onOpen }: Props & { onOpen: (o: Over
         </div>
       ) : (
         <EmptyState title={copy.emptyMoments} />
-      )}
-
-      <SectionTitle>{copy.yourMoments}</SectionTitle>
-      {myMoments.length ? (
-        <div className="moments">
-          {myMoments.map((p) => (
-            <article key={p.id} className="moment compact">
-              <TimeAgo seconds={p.secondsSinceShare} />
-              <p>{p.body}</p>
-              <p className="counts">{p.likes} Crushes · {p.comments} Whispers</p>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <EmptyState title={copy.emptyMoments} hint={copy.momentHint} />
-      )}
-
-      <SectionTitle>{copy.vibes}</SectionTitle>
-      {myVibes.length ? (
-        <div className="chips">
-          {myVibes.map((v) => <Chip key={v.id} tone="shared">{v.label}</Chip>)}
-        </div>
-      ) : (
-        <EmptyState title={copy.emptyVibes} hint={copy.shareVibe} />
       )}
     </div>
   )

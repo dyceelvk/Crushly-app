@@ -1,22 +1,21 @@
 import { useState } from 'react'
 import {
-  BadgeCheck, BellOff, Bookmark, ChevronRight, Heart, MapPin, MessageCircleHeart,
-  Sparkles, Users, Zap,
+  BadgeCheck, BellOff, Bookmark, CheckCircle2, ChevronRight, EyeOff, Heart,
+  MessageCircle, Moon, Shield, Sparkles, Users, Zap,
 } from 'lucide-react'
-import { Avatar, EmptyState, SectionTitle, VerifiedMark } from './ui'
+import { Avatar, EmptyState, LogoMark, SectionTitle, SoonChip } from './ui'
 import { copy, crushAlertText } from '../language/crushly'
-import { AREAS, INTEREST_POOL } from '../data/mock'
+import { AREAS, INTEREST_POOL, PRONOUN_OPTIONS } from '../data/mock'
 import type { Dispatch } from '../state/types'
 import type { State } from '../data/mock'
 
 const minsAgo = (at: number) => Math.max(0, Math.round((Date.now() - at) / 60000))
 
 /**
- * §21 — Crush Alerts. The prompt makes this a surface of its own, so it is not
- * just a toast: every event is logged, read-state is trackable, and tapping a
- * row opens the Space it came from.
+ * Brief §21 — the notification center. Every event is logged, read-state is
+ * trackable, and tapping a row opens the profile it came from.
  */
-export function AlertsPanel({ state, dispatch }: { state: State; dispatch: Dispatch }) {
+export function NotificationsPanel({ state, dispatch }: { state: State; dispatch: Dispatch }) {
   const unread = state.notifications.filter((n) => !n.read).length
   const nameOf = (id: string) => state.profiles.find((p) => p.id === id)?.name ?? 'Someone'
 
@@ -44,9 +43,9 @@ export function AlertsPanel({ state, dispatch }: { state: State; dispatch: Dispa
                 <span className="icon-bubble" data-kind={n.kind}>
                   {n.kind === 'click' ? <Zap size={14} />
                     : n.kind === 'bigCrush' ? <Sparkles size={14} />
-                    : n.kind === 'whisper' ? <MessageCircleHeart size={14} />
+                    : n.kind === 'whisper' ? <MessageCircle size={14} />
                     : n.kind === 'keepClose' ? <Users size={14} />
-                    : n.kind === 'vibe' ? <Bookmark size={14} />
+                    : n.kind === 'vibe' || n.kind === 'moment' ? <Bookmark size={14} />
                     : <Heart size={14} />}
                 </span>
                 <span className="row-main">
@@ -65,130 +64,13 @@ export function AlertsPanel({ state, dispatch }: { state: State; dispatch: Dispa
   )
 }
 
-/**
- * §12, §14, §15, §16 — the four lists a connection system needs: who Crushed
- * you, who you Crushed, your Clicks, your Close Ones and your Circle.
- */
-export function ActivityPanel({ state, dispatch }: { state: State; dispatch: Dispatch }) {
-  const [tab, setTab] = useState<'crushes' | 'clicks' | 'close' | 'circle'>('crushes')
-  const live = state.profiles.filter((p) => !state.blocks[p.id])
-  const clickedIds = new Set(state.matches.map((m) => m.profileId))
-
-  const sentYou = live.filter((p) => state.likedBy[p.id])
-  const iSent = live.filter((p) => state.likes[p.id] && !clickedIds.has(p.id))
-  const clicks = live.filter((p) => clickedIds.has(p.id))
-  const closeOnes = live.filter((p) => state.followers[p.id])
-  const keeping = live.filter((p) => state.following[p.id])
-  const circle = live.filter((p) => state.friends[p.id])
-
-  const tabs = [
-    { id: 'crushes' as const, label: copy.crushesTab, count: sentYou.length },
-    { id: 'clicks' as const, label: copy.clicksLabel, count: clicks.length },
-    { id: 'close' as const, label: copy.yourCloseOnes, count: closeOnes.length },
-    { id: 'circle' as const, label: copy.yourCircle, count: circle.length },
-  ]
-
-  const rows = tab === 'crushes' ? sentYou : tab === 'clicks' ? clicks : tab === 'close' ? closeOnes : keeping
-
+/** Brief §22 — settings, grouped the way the brief lists them. */
+export function SettingsPanel({
+  state, dispatch, onEdit, onSafety,
+}: { state: State; dispatch: Dispatch; onEdit: () => void; onSafety: () => void }) {
   return (
     <div className="panel-stack">
-      <div className="segbar">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            className={tab === t.id ? 'seg on' : 'seg'}
-            onClick={() => setTab(t.id)}
-            aria-pressed={tab === t.id}
-          >
-            {t.label}
-            <span className="seg-count">{t.count}</span>
-          </button>
-        ))}
-      </div>
-
-      {!rows.length ? (
-        <EmptyState
-          title={
-            tab === 'crushes' ? copy.emptyCrushes
-              : tab === 'clicks' ? copy.emptyClicks
-              : tab === 'close' ? copy.emptyCloseOnes
-              : copy.emptyCircle
-          }
-          hint={copy.noActivity}
-        />
-      ) : (
-        <ul className="rows">
-          {rows.map((p) => (
-            <li key={p.id}>
-              <button className="row" onClick={() => dispatch({ type: 'openSpace', profileId: p.id })}>
-                <Avatar name={p.name} hue={p.hue} size={44} />
-                <span className="row-main">
-                  <span className="row-name">{p.name}, {p.age} <VerifiedMark verified={p.verified} name={p.name} /></span>
-                  <span className="row-sub">
-                    {tab === 'crushes'
-                      ? state.likes[p.id] ? copy.crushedBack : copy.crushBackHint
-                      : tab === 'clicks'
-                        ? copy.startWhisper
-                        : tab === 'close'
-                          ? copy.closeOneSince
-                          : copy.circleSince}
-                  </span>
-                </span>
-                <ChevronRight size={16} className="row-chev" aria-hidden />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {tab === 'crushes' && iSent.length ? (
-        <>
-          <SectionTitle>{copy.crushHistory}</SectionTitle>
-          <ul className="rows">
-            {iSent.map((p) => (
-              <li key={p.id}>
-                <div className="row">
-                  <Avatar name={p.name} hue={p.hue} size={40} />
-                  <span className="row-main">
-                    <span className="row-name">{p.name}</span>
-                    <span className="row-sub">{copy.awaitingReply}</span>
-                  </span>
-                  <button className="btn quiet tiny" onClick={() => dispatch({ type: 'takeBackCrush', profileId: p.id })}>
-                    {copy.takeBackCrush}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-
-      {tab === 'circle' ? (
-        <p className="hint">{circle.length ? copy.circleHint : copy.emptyCircle}</p>
-      ) : null}
-
-      {tab === 'close' ? (
-        <div className="chips">
-          {keeping.map((p) => (
-            <span key={p.id} className="chip person">
-              <Avatar name={p.name} hue={p.hue} size={20} /> {p.name}
-              <button className="mini tiny" onClick={() => dispatch({ type: 'letGo', profileId: p.id })} aria-label={copy.letGo}>
-                ✕
-              </button>
-            </span>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  )
-}
-
-/** §27, §28, §29 — every row here writes something real. */
-export function SettingsPanel({ state, dispatch, onEdit }: { state: State; dispatch: Dispatch; onEdit: () => void }) {
-  const cutOff = state.profiles.filter((p) => state.blocks[p.id])
-  return (
-    <div className="panel-stack">
-      <SectionTitle>{copy.spaceSettings}</SectionTitle>
+      <SectionTitle>{copy.account}</SectionTitle>
       <button className="row setrow" onClick={onEdit}>
         <span className="row-main">
           <span className="row-name">{copy.editSpace}</span>
@@ -209,8 +91,40 @@ export function SettingsPanel({ state, dispatch, onEdit }: { state: State; dispa
           <span className="row-sub">{copy.verificationHint}</span>
         </span>
       </button>
+      <div className="row setrow static">
+        <span className="row-main">
+          <span className="row-name">{copy.phoneEmail}</span>
+        </span>
+        <SoonChip />
+      </div>
+      <div className="row setrow static">
+        <span className="row-main">
+          <span className="row-name">{copy.password}</span>
+        </span>
+        <SoonChip />
+      </div>
+      <div className="row setrow static">
+        <span className="row-main">
+          <span className="row-name">{copy.accountStatus}</span>
+          <span className="row-sub">{copy.activeStatus}</span>
+        </span>
+      </div>
 
-      <SectionTitle>{copy.crushPreferences}</SectionTitle>
+      <SectionTitle>{copy.discoverySection}</SectionTitle>
+      <label className="slider">
+        <span>{copy.ageRangeLabel}: {state.me.ageRange[0]}–{state.me.ageRange[1]}</span>
+        <input
+          type="range" min={18} max={state.me.ageRange[1]} value={state.me.ageRange[0]}
+          onChange={(e) => dispatch({ type: 'updateMe', patch: { ageRange: [Number(e.target.value), state.me.ageRange[1]] } })}
+        />
+      </label>
+      <label className="slider">
+        <span>{copy.distanceLabel}: {state.me.maxDistanceKm} km</span>
+        <input
+          type="range" min={1} max={50} value={state.me.maxDistanceKm}
+          onChange={(e) => dispatch({ type: 'updateMe', patch: { maxDistanceKm: Number(e.target.value) } })}
+        />
+      </label>
       <div className="chips">
         {copy.lookingOptions.map((o) => (
           <button
@@ -232,68 +146,142 @@ export function SettingsPanel({ state, dispatch, onEdit }: { state: State; dispa
           </button>
         ))}
       </div>
-      <label className="slider">
-        <span>{copy.ageRangeLabel}: {state.me.ageRange[0]}–{state.me.ageRange[1]}</span>
-        <input
-          type="range" min={18} max={state.me.ageRange[1]} value={state.me.ageRange[0]}
-          onChange={(e) => dispatch({ type: 'updateMe', patch: { ageRange: [Number(e.target.value), state.me.ageRange[1]] } })}
-        />
-      </label>
-      <label className="slider">
-        <span>{copy.distanceLabel}: {state.me.maxDistanceKm} km</span>
-        <input
-          type="range" min={1} max={50} value={state.me.maxDistanceKm}
-          onChange={(e) => dispatch({ type: 'updateMe', patch: { maxDistanceKm: Number(e.target.value) } })}
-        />
-      </label>
 
-      <SectionTitle>{copy.whisperSettings}</SectionTitle>
-      <div className="chips">
-        {(['Everyone', 'Clicks only'] as const).map((o) => (
-          <button
-            key={o}
-            className={state.me.whisperPermission === o ? 'chip selectable on' : 'chip selectable'}
-            onClick={() => dispatch({ type: 'updateMe', patch: { whisperPermission: o } })}
-            aria-pressed={state.me.whisperPermission === o}
-          >
-            {o === 'Everyone' ? copy.whisperEveryone : copy.whisperClicksOnly}
-          </button>
-        ))}
+      <SectionTitle>{copy.privacySection}</SectionTitle>
+      <div>
+        <span className="label">{copy.whoCanMessage}</span>
+        <div className="chips">
+          {(['Everyone', 'Clicks only'] as const).map((o) => (
+            <button
+              key={o}
+              className={state.me.whisperPermission === o ? 'chip selectable on' : 'chip selectable'}
+              onClick={() => dispatch({ type: 'updateMe', patch: { whisperPermission: o } })}
+              aria-pressed={state.me.whisperPermission === o}
+            >
+              {o === 'Everyone' ? copy.messageEveryone : copy.messageMutualOnly}
+            </button>
+          ))}
+        </div>
+        <p className="hint">{copy.whisperHint}</p>
       </div>
-      <p className="hint">{copy.whisperHint}</p>
 
-      <SectionTitle>{copy.privacy}</SectionTitle>
+      <SectionTitle>{copy.notificationsSection}</SectionTitle>
       {([
-        ['discoverable', copy.discoverMeToggle],
-        ['showDistance', copy.distanceToggle],
-        ['showOnlineStatus', copy.onlineToggle],
+        ['messages', copy.notifyMessages],
+        ['crushes', copy.notifyCrushes],
+        ['moments', copy.notifyMoments],
       ] as const).map(([key, label]) => (
         <label className="switch" key={key}>
           <input
             type="checkbox"
-            checked={state.me[key]}
-            onChange={(e) => dispatch({ type: 'setPreference', key, value: e.target.checked })}
+            checked={state.me.notify[key]}
+            onChange={(e) => dispatch({ type: 'updateMe', patch: { notify: { ...state.me.notify, [key]: e.target.checked } } })}
           />
           <span>{label}</span>
         </label>
       ))}
 
-      <SectionTitle>{copy.account}</SectionTitle>
-      <button className="row setrow" onClick={() => dispatch({ type: 'updateMe', patch: { onboarded: false } })}>
+      <SectionTitle>{copy.safetyTitle}</SectionTitle>
+      <button className="row setrow" onClick={onSafety}>
         <span className="row-main">
-          <span className="row-name">{copy.obRestart}</span>
-          <span className="row-sub">{copy.obRestartHint}</span>
+          <span className="row-name"><Shield size={15} aria-hidden /> {copy.safetyTitle}</span>
+          <span className="row-sub">{copy.safetyIntro}</span>
         </span>
         <ChevronRight size={16} aria-hidden />
       </button>
 
-      <SectionTitle>{copy.cutOffListTitle}</SectionTitle>
-      {cutOff.length ? (
+      <SectionTitle>{copy.appearance}</SectionTitle>
+      <div className="row setrow static">
+        <span className="row-main">
+          <span className="row-name"><Moon size={15} aria-hidden /> {copy.darkMode}</span>
+        </span>
+        <span className="chip chip-online">{copy.activeStatus.split(' ')[0]}</span>
+      </div>
+      <div className="row setrow static">
+        <span className="row-main">
+          <span className="row-name">{copy.lightMode} / {copy.systemMode}</span>
+        </span>
+        <SoonChip />
+      </div>
+
+      <SectionTitle>{copy.support}</SectionTitle>
+      {([
+        { label: copy.helpCenter, Icon: Sparkles },
+        { label: copy.contactSupport, Icon: MessageCircle },
+        { label: copy.guidelines, Icon: Shield },
+        { label: copy.privacyPolicy, Icon: EyeOff },
+        { label: copy.terms, Icon: Bookmark },
+      ] as const).map(({ label, Icon }) => (
+        <div className="row setrow static" key={label}>
+          <span className="row-main">
+            <span className="row-name"><Icon size={15} aria-hidden /> {label}</span>
+          </span>
+          <SoonChip />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Brief §15/§16 — the Safety center. Controls stay easy to reach; reporting is
+ * never buried. Every toggle here writes a real preference.
+ */
+export function SafetyPanel({ state, dispatch }: { state: State; dispatch: Dispatch }) {
+  const blocked = state.profiles.filter((p) => state.blocks[p.id])
+  const flagged = state.profiles.filter((p) => state.flags[p.id])
+  const mutual = state.matches
+    .map((m) => state.profiles.find((p) => p.id === m.profileId))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p))
+
+  return (
+    <div className="panel-stack">
+      <p className="muted">{copy.safetyIntro}</p>
+
+      <SectionTitle>{copy.privacySection}</SectionTitle>
+      <label className="switch">
+        <input
+          type="checkbox" checked={state.me.discoverable}
+          onChange={(e) => dispatch({ type: 'setPreference', key: 'discoverable', value: e.target.checked })}
+        />
+        <span>{copy.visibleInDiscover} — <em className="hint">{copy.visibleHint}</em></span>
+      </label>
+      <label className="switch">
+        <input
+          type="checkbox" checked={!state.me.discoverable}
+          onChange={(e) => dispatch({ type: 'setPreference', key: 'discoverable', value: !e.target.checked })}
+        />
+        <span>{copy.incognito} (beta) — <em className="hint">{copy.incognitoHint}</em></span>
+      </label>
+      <label className="switch">
+        <input
+          type="checkbox" checked={state.me.showDistance}
+          onChange={(e) => dispatch({ type: 'setPreference', key: 'showDistance', value: e.target.checked })}
+        />
+        <span>{copy.locationPrivacy} — <em className="hint">{copy.locationHint}</em></span>
+      </label>
+      <label className="switch">
+        <input
+          type="checkbox" checked={state.me.showOnlineStatus}
+          onChange={(e) => dispatch({ type: 'setPreference', key: 'showOnlineStatus', value: e.target.checked })}
+        />
+        <span>{copy.onlineToggle}</span>
+      </label>
+      <label className="switch">
+        <input
+          type="checkbox" checked={state.me.readReceipts}
+          onChange={(e) => dispatch({ type: 'setPreference', key: 'readReceipts', value: e.target.checked })}
+        />
+        <span>{copy.readReceipts} — <em className="hint">{copy.readReceiptsHint}</em></span>
+      </label>
+
+      <SectionTitle>{copy.blockedUsers}</SectionTitle>
+      {blocked.length ? (
         <ul className="rows">
-          {cutOff.map((p) => (
+          {blocked.map((p) => (
             <li key={p.id}>
               <div className="row">
-                <MapPin size={15} aria-hidden />
+                <Avatar name={p.name} hue={p.hue} size={38} />
                 <span className="row-main"><span className="row-name">{p.name}</span></span>
                 <button className="btn tiny" onClick={() => dispatch({ type: 'letBackIn', profileId: p.id })}>
                   {copy.letBackIn}
@@ -303,14 +291,93 @@ export function SettingsPanel({ state, dispatch, onEdit }: { state: State; dispa
           ))}
         </ul>
       ) : (
-        <p className="hint">{copy.noneCutOff}</p>
+        <p className="hint">{copy.noneBlocked}</p>
       )}
+
+      <SectionTitle>{copy.reportsFiled}</SectionTitle>
+      {flagged.length ? (
+        <ul className="rows">
+          {flagged.map((p) => (
+            <li key={p.id}>
+              <div className="row">
+                <Avatar name={p.name} hue={p.hue} size={38} />
+                <span className="row-main"><span className="row-name">{p.name}</span></span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="hint">{copy.noneReported}</p>
+      )}
+
+      <SectionTitle>{copy.removeConnections}</SectionTitle>
+      {mutual.length ? (
+        <ul className="rows">
+          {mutual.map((p) => (
+            <li key={p.id}>
+              <div className="row">
+                <Avatar name={p.name} hue={p.hue} size={38} />
+                <span className="row-main">
+                  <span className="row-name">{p.name}</span>
+                  <span className="row-sub">{copy.clickedWith}</span>
+                </span>
+                <button
+                  className="btn tiny danger-text"
+                  onClick={() => dispatch({ type: 'confirm', kind: { kind: 'unclick', profileId: p.id } })}
+                >
+                  {copy.removeConnection}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="hint">{copy.noneToRemove}</p>
+      )}
+
+      <SectionTitle>{copy.security}</SectionTitle>
+      <p className="hint">{copy.securityHint}</p>
+
+      <SectionTitle>{copy.guidelines}</SectionTitle>
+      <p className="hint">{copy.guidelinesBody}</p>
     </div>
   )
 }
 
-/** Edit Space — the About Me / interests / area fields a Space owns. §7, §8. */
-export function EditSpacePanel({ state, dispatch, onDone }: { state: State; dispatch: Dispatch; onDone: () => void }) {
+/**
+ * Brief §18 — Crushly Plus. The feature list is real product direction; the
+ * purchase is honestly isolated: the CTA says plainly that Plus is not in
+ * this build, and nothing is ever charged or "activated".
+ */
+export function PremiumPanel({ dispatch }: { dispatch: Dispatch }) {
+  return (
+    <div className="panel-stack">
+      <div className="premium-hero">
+        <LogoMark size={72} />
+        <p className="premium-title">{copy.plusTitle}</p>
+        <p className="premium-sub">{copy.plusSub}</p>
+      </div>
+      <div className="premium-list">
+        {copy.plusFeatures.map((f) => (
+          <div className="plus-row" key={f}>
+            <CheckCircle2 size={22} aria-hidden />
+            {f}
+          </div>
+        ))}
+      </div>
+      <button className="btn primary wide" onClick={() => dispatch({ type: 'toast', text: copy.plusSoon })}>
+        {copy.goPremium}
+      </button>
+      <p className="hint premium-note">{copy.plusSoon}</p>
+    </div>
+  )
+}
+
+/** Edit profile — the fields a profile owns (brief §8, §13). */
+export function EditProfilePanel({ state, dispatch, onDone }: { state: State; dispatch: Dispatch; onDone: () => void }) {
+  const [name, setName] = useState(state.me.name)
+  const [username, setUsername] = useState(state.me.username)
+  const [pronouns, setPronouns] = useState(state.me.pronouns)
   const [about, setAbout] = useState(state.me.about)
   const [interests, setInterests] = useState<string[]>(state.me.interests)
   const [area, setArea] = useState(state.me.area)
@@ -318,6 +385,31 @@ export function EditSpacePanel({ state, dispatch, onDone }: { state: State; disp
   return (
     <div className="panel-stack">
       <SectionTitle>{copy.editSpace}</SectionTitle>
+      <label>
+        <span className="label">{copy.obName}</span>
+        <input value={name} onChange={(e) => setName(e.target.value)} />
+      </label>
+      <label>
+        <span className="label">{copy.obUsername}</span>
+        <input
+          value={username}
+          onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+        />
+        <small className="muted">{copy.obUsernameHint}</small>
+      </label>
+      <div>
+        <span className="label">{copy.obPronouns}</span>
+        <div className="chips">
+          {PRONOUN_OPTIONS.map((p) => (
+            <button
+              key={p} className={pronouns === p ? 'chip selectable on' : 'chip selectable'}
+              onClick={() => setPronouns(p)} aria-pressed={pronouns === p}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
       <label>
         <span className="label">{copy.aboutMe}</span>
         <textarea rows={4} value={about} onChange={(e) => setAbout(e.target.value.slice(0, 320))} />
@@ -356,7 +448,14 @@ export function EditSpacePanel({ state, dispatch, onDone }: { state: State; disp
         <button
           className="btn primary"
           onClick={() => {
-            dispatch({ type: 'updateMe', patch: { about: about.trim(), interests, area } })
+            dispatch({
+              type: 'updateMe',
+              patch: {
+                name: name.trim() || state.me.name,
+                username: username.trim().toLowerCase() || state.me.username,
+                pronouns, about: about.trim(), interests, area,
+              },
+            })
             onDone()
           }}
         >

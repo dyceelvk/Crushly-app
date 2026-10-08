@@ -2,11 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff4f7d'/%3E%3Cstop offset='1' stop-color='%238157ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M16 23.5S8 18.6 8 13.6C8 10.9 10.1 9 12.6 9c1.4 0 2.7.7 3.4 1.8C16.7 9.7 18 9 19.4 9 21.9 9 24 10.9 24 13.6c0 5-8 9.9-8 9.9z' fill='white'/%3E%3C/svg%3E" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='44' fill='%23000'/%3E%3Ccircle cx='100' cy='100' r='88' fill='none' stroke='%23D4AF37' stroke-width='3' opacity='0.3'/%3E%3Cpath d='M140 55 C110 40, 60 45, 50 85 C40 125, 70 160, 110 160 C130 160, 145 150, 150 140' fill='none' stroke='%23D4AF37' stroke-width='14' stroke-linecap='round'/%3E%3Cpath d='M55 110 Q80 95, 100 110 Q120 125, 145 110' fill='none' stroke='%23E8C547' stroke-width='8' stroke-linecap='round' opacity='0.9'/%3E%3C/svg%3E" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b0810" />
-    <meta name="description" content="Crushly — discover men, send Crushes, Click, Keep Close and Whisper. A social and dating app designed for gay men." />
-    <title>Crushly — Discover men. Click. Whisper.</title>
+    <meta name="theme-color" content="#07050d" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Crushly — discover men, send Crushes, find Mutual Crushes and message. A premium private social space for gay men." />
+    <title>Crushly — Find your connection.</title>
   </head>
   <body>
     <div id="root"></div>
@@ -21,14 +22,14 @@
           var root = document.getElementById('root')
           if (!root || root.hasChildNodes()) return
           document.body.style.margin = '0'
-          document.body.style.background = '#0b0810'
+          document.body.style.background = '#07050d'
           root.innerHTML =
-            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;color:#f6f0f9;font-family:system-ui,-apple-system,sans-serif">' +
-            '<div style="max-width:430px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:32px 24px">' +
+            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;color:#f6f0e8;font-family:system-ui,-apple-system,sans-serif">' +
+            '<div style="max-width:430px;text-align:center;background:rgba(255,255,255,.05);border:1px solid rgba(236,211,160,.18);border-radius:26px;padding:34px 26px;box-shadow:0 30px 80px rgba(0,0,0,.6)">' +
             '<h1 style="font-size:19px;margin:0 0 8px">Crushly could not start</h1>' +
-            '<p style="font-size:14px;line-height:1.6;color:rgba(246,240,249,.7);margin:0 0 6px">The app files did not load. Check your connection and try again.</p>' +
-            '<p style="font-size:12px;line-height:1.6;color:rgba(246,240,249,.45);margin:0">Deploying? This usually means the site is serving source files instead of the built <b>dist/</b> output of <b>npm run build</b>.</p>' +
-            '<button onclick="location.reload()" style="margin-top:14px;background:linear-gradient(135deg,#ff4f7d,#8157ff);color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:14px;font-weight:700;cursor:pointer">Try again</button>' +
+            '<p style="font-size:14px;line-height:1.6;color:rgba(246,240,232,.7);margin:0 0 6px">The app files did not load. Check your connection and try again.</p>' +
+            '<p style="font-size:12px;line-height:1.6;color:rgba(246,240,232,.45);margin:0">Deploying? This usually means the site is serving source files instead of the built <b>dist/</b> output of <b>npm run build</b>.</p>' +
+            '<button onclick="location.reload()" style="margin-top:16px;background:linear-gradient(135deg,#f6e3b4,#c9a05c);color:#241703;border:0;border-radius:999px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 10px 30px rgba(201,160,92,.35)">Try again</button>' +
             '</div></div>'
         }, 12000)
       })

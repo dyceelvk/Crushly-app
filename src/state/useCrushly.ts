@@ -36,10 +36,10 @@ export function reducer(ui: UiState, action: Action): UiState {
       const mutual = Boolean(s.likedBy[action.profileId])
       if (mutual && !s.matches.some((m) => m.profileId === action.profileId)) {
         matches = [...matches, { id: `m${Date.now()}`, profileId: action.profileId, createdAt: 'just now' }]
-        // §21/§33 — a Click is announced, and it is what unlocks Whispers.
-        alerts = push(alerts, copy.clickAlert(name), 'click')
+        // A Mutual Crush is announced, and it is what unlocks Messages.
+        alerts = push(alerts, copy.mutualCrushAlert(name), 'click')
       } else {
-        alerts = push(alerts, action.big ? copy.bigCrushSent(name) : copy.crushSent(name), 'crush')
+        alerts = push(alerts, action.big ? copy.deepCrushSent(name) : copy.crushSent(name), 'crush')
       }
       const notifications = mutual
         ? notify(s.notifications, 'click', action.profileId)
@@ -109,7 +109,7 @@ export function reducer(ui: UiState, action: Action): UiState {
       }
 
     case 'unclick':
-      // §14/§25 — Unclick drops the Click and its Whispers.
+      // "Remove connection" drops the Mutual Crush and its Messages.
       return {
         ...ui,
         confirm: null,
@@ -143,10 +143,22 @@ export function reducer(ui: UiState, action: Action): UiState {
           posts: [
             {
               id: `po${Date.now()}`, authorId: 'me', body: action.body,
-              secondsSinceShare: 0, likes: 0, comments: 0, saved: false,
+              secondsSinceShare: 0, likes: 0, comments: 0, saved: false, reacted: false,
             },
             ...s.posts,
           ],
+        },
+      }
+
+    case 'reactMoment':
+      // Brief §12 — a Crush reaction on a Moment is a real write, not a fake count.
+      return {
+        ...ui,
+        state: {
+          ...s,
+          posts: s.posts.map((p) =>
+            p.id === action.postId ? { ...p, reacted: !p.reacted, likes: p.likes + (p.reacted ? -1 : 1) } : p,
+          ),
         },
       }
 
@@ -195,7 +207,6 @@ export function reducer(ui: UiState, action: Action): UiState {
       return { ...ui, state: { ...s, notifications: s.notifications.map((n) => ({ ...n, read: true })) } }
 
     case 'setTyping':
-      // §17 — the indicator reads "Whispering…", never "typing".
       return { ...ui, state: { ...s, typingProfileId: action.profileId } }
 
     case 'whisperReply': {
@@ -231,6 +242,11 @@ export function reducer(ui: UiState, action: Action): UiState {
     case 'dismissAlert':
       return { ...ui, alerts: ui.alerts.filter((a) => a.id !== action.id) }
 
+    case 'toast':
+      // A screen-level notice (link copied, coming soon, …) — same pipeline
+      // as action alerts, so nothing renders outside the copy registry.
+      return { ...ui, alerts: push(ui.alerts, action.text, action.tone ?? 'info') }
+
     default:
       return ui
   }
@@ -246,15 +262,15 @@ export function useCrushly() {
 
   const derived = useMemo(() => {
     const s = ui.state
-    /** §35 — a cut-off Space never surfaces anywhere in the product. */
+    /** A blocked profile never surfaces anywhere in the product. */
     const visible = s.profiles.filter((p) => !s.blocks[p.id])
     const clickedIds = new Set(s.matches.map((m) => m.profileId))
     return {
       visible,
       clickedIds,
-      /** People who Crushed the user, not yet Clicked. */
+      /** People who Crushed the user, not yet mutual. */
       incoming: visible.filter((p) => s.likedBy[p.id] && !clickedIds.has(p.id)),
-      /** §9/§34 — relevance over randomness: interests, intent, activity, distance. */
+      /** Relevance over randomness: interests, intent, activity, distance. */
       ranked: visible
         .filter((p) => !s.likes[p.id] && !s.dismissed[p.id])
         .map((p) => {

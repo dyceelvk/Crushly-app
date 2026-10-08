@@ -3,7 +3,7 @@ import type { State } from '../data/mock'
 
 /**
  * The only write surface the UI has. Every action is named after the
- * conventional concept (§38); the Crushly word is applied when rendering.
+ * conventional concept; the Crushly word is applied when rendering.
  */
 export type Action =
   | { type: 'crush'; profileId: string; big: boolean }
@@ -19,6 +19,7 @@ export type Action =
   | { type: 'shareMoment'; body: string }
   | { type: 'shareVibe'; label: string }
   | { type: 'saveMoment'; postId: string }
+  | { type: 'reactMoment'; postId: string }
   | { type: 'takeBackCrush'; profileId: string }
   | { type: 'markAlertsRead' }
   | { type: 'setTyping'; profileId: string | null }
@@ -26,12 +27,13 @@ export type Action =
   | { type: 'toggleVerified' }
   | { type: 'updateMe'; patch: Partial<State['me']> }
   | { type: 'completeOnboarding' }
-  | { type: 'setPreference'; key: 'discoverable' | 'showDistance' | 'showOnlineStatus'; value: boolean }
+  | { type: 'setPreference'; key: 'discoverable' | 'showDistance' | 'showOnlineStatus' | 'readReceipts'; value: boolean }
   | { type: 'openSpace'; profileId: string | null }
   | { type: 'confirm'; kind: UiState['confirm'] }
   | { type: 'dismissAlert'; id: number }
+  | { type: 'toast'; text: string; tone?: 'crush' | 'click' | 'info' | 'danger' }
 
 export type Dispatch = (a: Action) => void
 
 /** Which full-screen panel is open above the tab shell. */
-export type Overlay = 'none' | 'alerts' | 'activity' | 'settings' | 'edit'
+export type Overlay = 'none' | 'notifications' | 'settings' | 'edit' | 'safety' | 'premium'
