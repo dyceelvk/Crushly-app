@@ -10,6 +10,22 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Boot check: if the app bundle never executes (e.g. a deploy is serving
+      // source files instead of the built dist/ output), replace the silent
+      // white screen with a diagnosis. Set to true at the top of src/main.tsx.
+      window.__CRUSHLY_BOOTED__ = false;
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          if (window.__CRUSHLY_BOOTED__) return;
+          var root = document.getElementById('root');
+          if (!root || root.hasChildNodes()) return;
+          document.body.style.margin = '0';
+          document.body.style.background = '#0F0A1E';
+          root.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0F0A1E;color:#f5f1ff;font-family:system-ui,-apple-system,sans-serif;padding:24px;box-sizing:border-box"><div style="max-width:430px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:32px 24px"><div style="font-size:40px">💔</div><h1 style="font-size:20px;margin:12px 0 8px">Crushly couldn\'t start</h1><p style="font-size:14px;line-height:1.6;color:rgba(245,241,255,.7)">The app files didn\'t load. Check your connection and try again.</p><p style="font-size:12px;line-height:1.6;color:rgba(245,241,255,.45)">Site owner? The app bundle never executed — this usually means the site is serving the source folder instead of the built <b>dist/</b> output of <b>npm run build</b>.</p><button onclick="location.reload()" style="margin-top:12px;background:linear-gradient(135deg,#FF2E63,#7C3AED);color:#fff;border:0;border-radius:999px;padding:12px 28px;font-size:15px;font-weight:800;cursor:pointer">Try again</button></div></div>';
+        }, 12000);
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -6,7 +6,10 @@ Crushly is a social & dating ecosystem designed primarily for gay men —
 not a clone of Tinder, Grindr, or Bumble. It has its own terminology,
 interaction system, visual identity, and community culture.
 
-Full product/UX/language spec: [`Crushlyapp.prmpt`](./Crushlyapp.prmpt)
+> The original product/UX/language spec (`Crushlyapp.prmpt`) has been fully
+> extracted into this codebase — the dictionary lives in
+> [`src/lib/language.ts`](./src/lib/language.ts). The spec file itself was
+> removed from the repo (it remains in git history).
 
 ## Quick start
 
