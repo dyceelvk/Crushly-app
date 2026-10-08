@@ -12,8 +12,12 @@ npm install
 npm run dev        # http://localhost:5173
 npm run verify     # typecheck + language audit
 npm run smoke      # behaviour + render assertions
-npm run build
+npm run build      # static dist/
 ```
+
+Deployment is documented in [DEPLOY.md](./DEPLOY.md) — Netlify (via
+`netlify.toml`) or GitHub Pages (via the workflow), both building the same
+`dist/`.
 
 ## The one rule that shapes the codebase
 
